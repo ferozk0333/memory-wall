@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Memory Wall Is Strangling Your LLM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #faf9f7;
+  --surface: #ffffff;
+  --surface2: #f3f2ef;
+  --surface3: #e9e7e2;
+  --border: rgba(0,0,0,0.09);
+  --border2: rgba(0,0,0,0.16);
+  --text: #1c1b18;
+  --text2: #54524b;
+  --text3: #96938c;
+  --accent: #1a56db;
+  --teal: #0f766e;
+  --amber: #92400e;
+  --coral: #b91c1c;
+  --orange: #c2410c;
+  --font-serif: 'Lora', Georgia, serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --col: 680px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.75;
+  min-height: 100vh;
+}
+
+/* ---- LAYOUT ---- */
+.page { max-width: var(--col); margin: 0 auto; padding: 0 24px 100px; }
+
+/* ---- HEADER ---- */
+.pub-bar {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  display: flex; gap: 16px; align-items: center;
+}
+.pub-bar strong { color: var(--text2); font-weight: 500; }
+
+.hero { padding: 56px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+
+.hero h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.9rem, 4.5vw, 2.8rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -.01em;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.hero-sub {
+  font-size: 18px;
+  color: var(--text2);
+  line-height: 1.65;
+  max-width: 580px;
+  font-style: italic;
+  font-family: var(--font-serif);
+  margin-bottom: 28px;
+}
+
+.byline {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text3);
+  letter-spacing: .04em;
+  display: flex; gap: 16px; flex-wrap: wrap;
+}
+.byline strong { color: var(--text2); font-weight: 500; }
+
+/* ---- KEY NUMBERS BAR ---- */
+.key-numbers {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  margin: 32px 0;
+}
+.kn {
+  background: var(--surface);
+  padding: 18px 20px;
+}
+.kn-num {
+  font-family: var(--font-mono);
+  font-size: 28px; font-weight: 500;
+  color: var(--accent); line-height: 1;
+  margin-bottom: 4px;
+}
+.kn-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; }
+
+/* ---- PROSE ---- */
+.prose { margin-bottom: 0; }
+
+.prose p {
+  margin-bottom: 22px;
+  color: var(--text);
+  font-size: 17px;
+  line-height: 1.75;
+}
+
+.prose h2 {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--text);
+  margin: 48px 0 14px;
+  line-height: 1.3;
+}
+
+.prose h3 {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin: 40px 0 6px;
+}
+
+.prose strong { font-weight: 500; color: var(--text); }
+.prose em { font-style: italic; color: var(--text2); }
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--surface2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: var(--teal);
+}
+
+/* ---- PULLQUOTE ---- */
+.pullquote {
+  border-left: 3px solid var(--accent);
+  padding: 4px 0 4px 20px;
+  margin: 32px 0;
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--text2);
+  line-height: 1.6;
+}
+
+/* ---- FORMULA ---- */
+.formula {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--teal);
+  border-radius: 0 8px 8px 0;
+  padding: 14px 18px;
+  margin: 24px 0;
+  color: var(--teal);
+  line-height: 1.6;
+}
+
+/* ---- INTERACTIVE WIDGET ---- */
+.widget {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 36px 0;
+}
+
+.widget-header {
+  padding: 14px 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+.widget-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.widget-title {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  padding-bottom: 12px;
+}
+
+.widget canvas { display: block; width: 100%; }
+
+.widget-controls {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+}
+.ctrl-label { font-size: 11px; color: var(--text3); }
+.ctrl-val { color: var(--accent); min-width: 44px; font-weight: 500; }
+
+input[type=range] {
+  flex:1; min-width:60px; height:2px;
+  accent-color: var(--accent);
+  cursor: pointer; outline: none;
+}
+
+.wbtn {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 6px 14px; border-radius: 6px;
+  background: rgba(26,86,219,.08);
+  border: 1px solid rgba(26,86,219,.2);
+  color: var(--accent); cursor: pointer; transition: all .15s;
+}
+.wbtn:hover { background: rgba(26,86,219,.14); }
+.wbtn:active { transform: scale(.97); }
+.wbtn.sec { background: var(--surface3); border-color: var(--border2); color: var(--text2); }
+.wbtn.sec:hover { color: var(--text); }
+
+.spill {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 3px 9px; border-radius: 100px;
+  background: var(--surface3); color: var(--text3);
+}
+.spill.run { background: rgba(15,118,110,.1); color: var(--teal); border: 1px solid rgba(15,118,110,.2); }
+.spill.done { background: rgba(26,86,219,.07); color: var(--accent); border: 1px solid rgba(26,86,219,.16); }
+
+.widget-legend {
+  display: flex; gap: 14px; flex-wrap: wrap;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+}
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text3); font-family: var(--font-mono); }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ---- STAT ROW ---- */
+.stat-row {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 10px; margin: 20px 0;
+}
+.stat-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px;
+}
+.stat-box.hi { border-color: rgba(26,86,219,.25); background: rgba(26,86,219,.04); }
+.stat-box.hi .sb-val { color: var(--accent); }
+.stat-box.warn { border-color: rgba(185,28,28,.2); background: rgba(185,28,28,.03); }
+.stat-box.warn .sb-val { color: var(--coral); }
+.sb-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 5px; }
+.sb-val { font-family: var(--font-mono); font-size: 22px; font-weight: 500; color: var(--text); line-height: 1; margin-bottom: 3px; }
+.sb-sub { font-size: 12px; color: var(--text3); }
+
+/* ---- SECTION DIVIDER ---- */
+.divider {
+  display: flex; align-items: center; gap: 14px;
+  margin: 48px 0 0;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* ---- REFS ---- */
+.refs { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); }
+.refs h2 { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--text3); margin-bottom: 16px; }
+.refs ol { padding-left: 20px; }
+.refs li { font-size: 13px; color: var(--text3); line-height: 1.6; margin-bottom: 8px; }
+.refs li strong { color: var(--text2); font-weight: 400; }
+
+/* ---- FOOTER ---- */
+.footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text3); }
+.footer a { color: var(--accent); text-decoration: none; }
+
+@media (max-width:560px) {
+  .stat-row { grid-template-columns: repeat(2,1fr); }
+  .key-numbers { grid-template-columns: repeat(2,1fr); }
+  .key-numbers .kn:last-child { grid-column: span 2; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- PUB BAR -->
+<div class="pub-bar">
+  <strong>Data Science Collective</strong>
+  <span>Feroz Khan</span>
+  <span>May 2026</span>
+  <span>13 min read</span>
+</div>
+
+<!-- HERO -->
+<header class="hero">
+  <h1>The Memory Wall Is Strangling Your LLM: Why GPUs Are Faster Than We Think and Slower Than We Need</h1>
+  <p class="hero-sub">A structural problem hiding behind impressive benchmark numbers.</p>
+  <div class="byline">
+    <span><strong>Feroz Khan</strong></span>
+    <span>ML Engineer, Seattle</span>
+  </div>
+
+  <div class="key-numbers">
+    <div class="kn"><div class="kn-num">62,000</div><div class="kn-label">Theoretical tok/s (H100)</div></div>
+    <div class="kn"><div class="kn-num">~200</div><div class="kn-label">Actual tok/s in production</div></div>
+    <div class="kn"><div class="kn-num">200x</div><div class="kn-label">The gap</div></div>
+  </div>
+</header>
+
+<!-- ===================== SECTION 1 ===================== -->
+<article class="prose">
+
+<p>There is a number that should bother anyone who has spent time thinking seriously about LLM inference: <strong>62,000 tokens per second</strong>.</p>
+
+<p>That is the theoretical throughput ceiling for an 8B-parameter model running on a single NVIDIA H100 GPU. You can derive it purely from the chip's peak compute capacity of one quadrillion floating-point operations per second (1 petaFLOP/s). It is the number you would include in a slide deck if you wanted to sound optimistic about AI infrastructure.</p>
+
+<p>The actual number, across virtually every production inference engine in use today, sits somewhere between 100 and 300 tokens per second.</p>
+
+<div class="pullquote">That is a 200x gap between theory and reality. And it is not a software bug, a framework inefficiency, or a failure of engineering ambition. It is a structural property of how modern hardware is built.</div>
+
+<h2>The Compute Illusion</h2>
+
+<p>Modern GPUs are genuinely extraordinary compute engines. The H100's tensor cores can perform matrix multiplications at a rate that would have seemed impossible a decade ago. If inference throughput were purely a function of arithmetic throughput, we would be living in a very different world where latency was effectively free and model serving was a solved problem.</p>
+
+<p>But inference throughput is not a function of arithmetic throughput. It is a function of <strong>memory bandwidth</strong>. Specifically, the rate at which a GPU can transfer data between its high-bandwidth memory (HBM) and its on-chip compute units. And that number, while impressive in absolute terms (3.35 TB/s on the H100), is nowhere near sufficient to keep those tensor cores fed.</p>
+
+<h2>What Decoding Actually Costs</h2>
+
+<p>An LLM with 8 billion parameters, stored in 16-bit precision, occupies roughly 16 GB of memory. During inference, generating each new token requires a full forward pass through the model. That means every single set of weights (all 16 GB of them) must travel from HBM to the on-chip SRAM and into the processor registers, get used for a matrix multiplication, and then be discarded to make room for the next layer's weights.</p>
+
+<p>This is not a one-time cost. It happens for every token generated.</p>
+
+<div class="formula">tokens/sec = HBM_bandwidth / model_size = 3,350 GB/s / 16 GB = ~200 tok/s</div>
+
+<p>If you want to generate a 1,000-token response, you need 1,000 complete weight transfers. With 3.35 TB/s of bandwidth and 16 GB of weights per transfer, the math is almost embarrassingly direct: you can afford roughly 200 transfers per second. The compute units, capable of 1,000 TFLOP/s, are sitting idle for most of this time, waiting for data to arrive.</p>
+
+</article>
+
+<!-- WIDGET 1: Memory Hierarchy -->
+<div class="widget">
+  <div class="widget-header">
+    <div class="widget-tag">Interactive / Section 1</div>
+    <div class="widget-title">The GPU memory hierarchy: where the bottleneck lives</div>
+  </div>
+  <canvas id="c-mem" style="height:320px"></canvas>
+  <div class="widget-legend">
+    <div class="leg"><div class="leg-dot" style="background:#1a56db"></div>Weight packet in HBM (80 GB)</div>
+    <div class="leg"><div class="leg-dot" style="background:#92400e"></div>In transit via bandwidth pipe</div>
+    <div class="leg"><div class="leg-dot" style="background:#0f766e"></div>In SRAM, being computed</div>
+    <div class="leg"><div class="leg-dot" style="background:#b91c1c"></div>Compute unit starving</div>
+    <div class="leg"><div class="leg-dot" style="background:#1a56db"></div>Compute unit busy</div>
+  </div>
+</div>
+
+<article class="prose">
+
+<div class="stat-row">
+  <div class="stat-box warn"><div class="sb-label">HBM (model weights)</div><div class="sb-val">80 GB</div><div class="sb-sub">3.35 TB/s bandwidth, the bottleneck</div></div>
+  <div class="stat-box"><div class="sb-label">On-chip SRAM</div><div class="sb-val">50 MB</div><div class="sb-sub">Fast but tiny, cannot hold any real model</div></div>
+  <div class="stat-box hi"><div class="sb-label">Peak compute</div><div class="sb-val">1 PFLOP/s</div><div class="sb-sub">Mostly idle during decode</div></div>
+</div>
+
+<p>This is the memory wall, not a new concept (Williams et al. described the roofline model formally in 2009), but newly relevant in a way that is defining the economics of AI infrastructure. Compute hardware has improved at roughly Moore's Law pace. Memory bandwidth has improved much more slowly. This divergence is what makes LLM inference structurally difficult.</p>
+
+<div class="divider">Section 2: Autoregressive Decode</div>
+<h2>One Token. One Full Weight Transfer. Repeat.</h2>
+
+<p>To appreciate why the memory wall is so hard to escape during decode, you need to think about <strong>arithmetic intensity</strong> : the ratio of floating-point operations to bytes of memory transferred, measured in FLOPs per byte.</p>
+
+<p>During autoregressive decoding, each new token requires its own forward pass. The ratio of output tokens to model streams is always 1:1. Arithmetic intensity stays constant regardless of response length, and it stays low. Decode is almost always memory-bound. Watch what happens token by token:</p>
+
+</article>
+
+<!-- WIDGET 2: AR Decode -->
+<div class="widget">
+  <div class="widget-header">
+    <div class="widget-tag">Interactive / Section 2</div>
+    <div class="widget-title">Autoregressive decoding: one 16 GB weight sweep per token</div>
+  </div>
+  <canvas id="c-decode" style="height:340px"></canvas>
+  <div class="widget-controls">
+    <button class="wbtn" id="btn-decode" onclick="toggleDecode()">Generate tokens</button>
+    <button class="wbtn sec" onclick="resetDecode()">Reset</button>
+    <div style="flex:1"></div>
+    <span class="ctrl-label">generated:</span>
+    <span class="ctrl-val" id="tok-count">0</span>
+    <span class="spill" id="dec-pill">idle</span>
+  </div>
+</div>
+
+<article class="prose">
+
+<p>The prefill stage, where the model processes the input prompt, behaves very differently. Because all prompt tokens are available simultaneously, the transformer can process them in parallel through a single forward pass. For a prompt of N tokens, you get N token-equivalents of computation from a single model stream. Arithmetic intensity scales linearly with sequence length. Prefill is compute-bound. <strong>This asymmetry between prefill and decode is a structural property of autoregressive generation, not an engineering oversight.</strong></p>
+
+<div class="divider">Section 3: KV Cache and Batching</div>
+<h2>Batching Helps, Until the KV Cache Kills It</h2>
+
+<p>The most obvious lever for improving arithmetic intensity during decode is batching. If you process 64 queries simultaneously, a single model stream extends 64 responses. The numerator of your arithmetic intensity ratio grows while the denominator stays fixed.</p>
+
+<p>But there is a catch. The KV cache is essential to making autoregressive inference tractable. In transformer attention, computing the attention scores for a new token requires access to the keys and values produced by every previous token. Rather than recomputing these from scratch each step (which would make cost scale as O(N2) with sequence length), inference engines cache them in HBM.</p>
+
+<p>The problem is that <strong>KV cache memory scales with batch size times sequence length times model depth</strong>. As batches grow larger and sequences get longer, the KV cache consumes an increasing share of HBM. This limits how much you can amortize the weight-streaming cost across multiple queries.</p>
+
+</article>
+
+<!-- WIDGET 3: Batching -->
+<div class="widget">
+  <div class="widget-header">
+    <div class="widget-tag">Interactive / Section 3</div>
+    <div class="widget-title">Drag to see how batching and KV cache trade off</div>
+  </div>
+  <canvas id="c-batch" style="height:360px"></canvas>
+  <div class="widget-controls">
+    <span class="ctrl-label">batch size</span>
+    <input type="range" id="batch-slider" min="1" max="64" value="1" oninput="updateBatch(this.value)">
+    <span class="ctrl-val" id="batch-val">1</span>
+    <span style="color:var(--text3)">queries</span>
+  </div>
+</div>
+
+<article class="prose">
+
+<div class="stat-row">
+  <div class="stat-box"><div class="sb-label">Arithmetic intensity</div><div class="sb-val" id="arith-val">1x</div><div class="sb-sub">vs single-query baseline</div></div>
+  <div class="stat-box" id="kv-card"><div class="sb-label">KV cache pressure</div><div class="sb-val" id="kv-val">1%</div><div class="sb-sub">of 80 GB HBM consumed</div></div>
+  <div class="stat-box hi"><div class="sb-label">Throughput gain</div><div class="sb-val" id="tput-val">1x</div><div class="sb-sub">relative to batch size 1</div></div>
+</div>
+
+<p>vLLM addressed part of this with <strong>PagedAttention</strong>, borrowing ideas from operating system virtual memory to manage KV cache blocks non-contiguously. This reduces fragmentation and allows HBM to be used more efficiently, enabling larger effective batch sizes. TensorRT-LLM adds fused kernels and multi-head attention optimizations that reduce per-token overhead. These are meaningful wins, but they all operate within the same fundamental constraint: a memory-bound regime where the limiting factor is how fast you can push bytes from HBM to compute.</p>
+
+<div class="divider">Section 4: Speculative Decoding</div>
+<h2>Guess Cheaply. Verify in Parallel.</h2>
+
+<p>Speculative decoding is a cleverer approach. The core insight: if you can predict the next several tokens cheaply, you can verify them all at once with the large model, amortizing one expensive forward pass across multiple tokens.</p>
+
+<p>In practice, this means running a small <em>draft model</em> (sometimes as small as a few hundred million parameters) for several steps to generate candidate token sequences. The large <em>verifier model</em> then processes the entire drafted sequence in a single forward pass (similar to prefill where multiple tokens are handled simultaneously), and either accepts or rejects each draft token using a carefully designed acceptance criterion that preserves the target distribution.</p>
+
+<p>When the draft model achieves high acceptance rates, speculative decoding effectively reduces the number of large model forward passes per output token, pushing the system toward higher arithmetic intensity. The verifier starts behaving more like a compute-bound workload.</p>
+
+</article>
+
+<!-- WIDGET 4: Speculative Decoding -->
+<div class="widget">
+  <div class="widget-header">
+    <div class="widget-tag">Interactive / Section 4</div>
+    <div class="widget-title">Speculative decoding: tune draft length and acceptance rate</div>
+  </div>
+  <canvas id="c-spec" style="height:380px"></canvas>
+  <div class="widget-controls">
+    <span class="ctrl-label">draft tokens</span>
+    <input type="range" id="draft-sl" min="1" max="8" value="4" oninput="updateSpec()">
+    <span class="ctrl-val" id="draft-val">4</span>
+    <span class="ctrl-label" style="margin-left:6px">acceptance</span>
+    <input type="range" id="acc-sl" min="10" max="95" value="75" oninput="updateSpec()">
+    <span class="ctrl-val" id="acc-val">75%</span>
+  </div>
+</div>
+
+<article class="prose">
+
+<div class="stat-row">
+  <div class="stat-box"><div class="sb-label">Tokens accepted per pass</div><div class="sb-val" id="spec-acc">3.0</div><div class="sb-sub">expected, given acceptance rate</div></div>
+  <div class="stat-box hi"><div class="sb-label">Effective speedup</div><div class="sb-val" id="spec-spd">3.0x</div><div class="sb-sub">vs naive single-token decode</div></div>
+  <div class="stat-box" id="spec-w-card"><div class="sb-label">Draft calibration</div><div class="sb-val" id="spec-warn">good</div><div class="sb-sub" id="spec-wsub">acceptance rate healthy</div></div>
+</div>
+
+<p>The challenge is calibrating the draft model. Too large, and it loses its speed advantage over the verifier. Too small, and acceptance rates collapse and you end up doing more total work than naive decoding. The acceptance rate is also sensitive to temperature, prompt distribution, and draft length. In practice, speculative decoding requires tuning and does not deliver consistent speedups across all task types.</p>
+
+<p>Variants worth noting: <strong>self-speculative decoding</strong> uses early exit layers of the same model as the draft mechanism, avoiding the need for a separate model entirely. <strong>Lookahead decoding</strong> uses n-gram speculation derived from the input. These methods trade generality for deployment simplicity.</p>
+
+<div class="divider">Section 5: Diffusion LLMs</div>
+<h2>A Structural Escape from Memory Bounds</h2>
+
+<p>Speculative decoding is fundamentally a patch on an autoregressive paradigm. The real question is whether the paradigm itself can be changed.</p>
+
+<p>Diffusion language models represent the most structurally distinct alternative currently in serious development. Rather than generating tokens left-to-right, one at a time, diffusion models operate on the entire output sequence simultaneously. They start with a fully masked or noisy sequence and iteratively refine it across multiple denoising steps until a coherent response emerges.</p>
+
+<p>From an arithmetic intensity perspective, this is a meaningful shift. During each denoising iteration, the model performs a forward pass that updates <em>every token in the context window</em>, not just one. With a context window of length L, a single model stream contributes L token-update operations instead of one. <strong>Arithmetic intensity scales with context length, which is the opposite of autoregressive decoding.</strong></p>
+
+<p>For typical response lengths of several hundred to a few thousand tokens, this pushes diffusion models well into compute-bound territory. The compute units are no longer waiting for weights to arrive; they are processing operations as fast as the HBM can feed them, and often HBM is not the bottleneck at all.</p>
+
+<p>But theory and practice diverge here in important ways. Early diffusion LLMs like LLaDA were often slower than their autoregressive counterparts in wall-clock time. The central waste in vanilla diffusion: most refinement steps do not actually update most tokens meaningfully. Empirically, at any given step, the model is highly confident about perhaps 10% of positions. The rest are ambiguous, yet the model dutifully computes updates for all positions, burning FLOPs on outputs it will likely revise in subsequent steps.</p>
+
+</article>
+
+<!-- WIDGET 5: Diffusion vs AR -->
+<div class="widget">
+  <div class="widget-header">
+    <div class="widget-tag">Interactive / Section 5</div>
+    <div class="widget-title">AR vs Diffusion vs Block Diffusion: compare generation modes</div>
+  </div>
+  <canvas id="c-diff" style="height:400px"></canvas>
+  <div class="widget-controls">
+    <button class="wbtn" onclick="runARDiff()">Run AR</button>
+    <button class="wbtn" onclick="runDiff()">Run Diffusion</button>
+    <button class="wbtn" onclick="runBlock()">Run Block Diffusion</button>
+    <button class="wbtn sec" onclick="resetDiff()">Reset</button>
+    <div style="flex:1"></div>
+    <span class="spill" id="diff-pill">idle</span>
+  </div>
+</div>
+
+<article class="prose">
+
+<div class="stat-row">
+  <div class="stat-box"><div class="sb-label">AR forward passes</div><div class="sb-val" id="ar-passes">0</div><div class="sb-sub">1 per output token, always</div></div>
+  <div class="stat-box"><div class="sb-label">Diffusion steps</div><div class="sb-val" id="diff-steps">0</div><div class="sb-sub">each updates all positions at once</div></div>
+  <div class="stat-box hi"><div class="sb-label">Compute regime</div><div class="sb-val" id="diff-regime" style="font-size:14px">-</div><div class="sb-sub">memory vs compute bound</div></div>
+</div>
+
+<h2>Block Diffusion: The Hybrid Architecture</h2>
+
+<p>The most promising current direction is <strong>block diffusion</strong> (ICLR 2025 Oral). It is a hybrid that combines the throughput advantages of diffusion with autoregressive models. The idea: partition the output into fixed-size blocks. Within each block, tokens are decoded using diffusion (all positions refined simultaneously). Across blocks, generation proceeds autoregressively, where each block conditions on all previous blocks.</p>
+
+<p>This structure recovers two important properties that vanilla diffusion sacrifices. First, <strong>early stopping</strong> becomes possible: once any block generates an EOS token, generation terminates without diffusing subsequent blocks. Second, <strong>KV caching</strong> is restored across blocks, reused exactly as in standard transformer inference.</p>
+
+<p>Most optimizations developed for autoregressive inference (speculative decoding, paged attention, continuous batching) can be grafted onto block diffusion without significant rearchitecting. From a systems perspective, block diffusion is the first architecture that seriously addresses both the memory bandwidth problem (via high arithmetic intensity within blocks) and the wasted computation problem (via adaptive stopping and KV caching across blocks).</p>
+
+<div class="divider">Section 6: The Roofline Model</div>
+<h2>A Framework for Thinking About Bottlenecks</h2>
+
+<p>The roofline model (Williams et al., 2009) gives us a clean way to reason about where inference algorithms fall in the compute-vs-memory spectrum. On a roofline plot, the x-axis represents arithmetic intensity (FLOPs per byte) and the y-axis represents achieved performance. The relationship is linear up to a ridge point: below the ridge, you are memory-bound, where performance scales with bandwidth. Above it, you are compute-bound, limited by peak FLOP/s.</p>
+
+<p>Autoregressive decoding sits far to the left of the ridge point. Prefill is compute-bound because it processes all prompt tokens in parallel. Diffusion and block diffusion cross into compute-bound territory by updating many tokens per model stream. Hover over each workload below to see exactly where it falls.</p>
+
+</article>
+
+<!-- WIDGET 6: Roofline -->
+<div class="widget">
+  <div class="widget-header">
+    <div class="widget-tag">Interactive / Section 6</div>
+    <div class="widget-title">Roofline model (H100): hover each workload to explore</div>
+  </div>
+  <div style="position:relative">
+    <canvas id="c-roof" style="height:400px"></canvas>
+    <div id="tip-roof" style="position:absolute;pointer-events:none;display:none;background:#fff;border:1px solid rgba(0,0,0,0.15);border-radius:8px;padding:10px 14px;font-size:12px;font-family:'DM Mono',monospace;color:#1c1b18;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.1);line-height:1.6"></div>
+  </div>
+  <div class="widget-legend">
+    <div class="leg"><div class="leg-dot" style="background:#b91c1c"></div>AR decode (memory-bound)</div>
+    <div class="leg"><div class="leg-dot" style="background:#c2410c"></div>AR decode, large batch</div>
+    <div class="leg"><div class="leg-dot" style="background:#92400e"></div>Speculative decode</div>
+    <div class="leg"><div class="leg-dot" style="background:#1a56db"></div>Diffusion LLM</div>
+    <div class="leg"><div class="leg-dot" style="background:#0f766e"></div>Prefill / encode</div>
+  </div>
+</div>
+
+<article class="prose">
+
+<div class="divider">Closing</div>
+<h2>What This Means for Inference Economics</h2>
+
+<p>Today, inference costs are dominated by compute time, and compute time is dominated by the memory-bandwidth ceiling during decode. GPU utilization for inference is structurally low compared to training. You are paying for peak FLOP/s hardware but using a small fraction of it productively.</p>
+
+<p>Architectures that shift workloads toward the compute-bound regime (whether through batching, speculative decoding, diffusion, or block diffusion) directly reduce cost per token by making better use of silicon that is already paid for. There is also a latency angle: for interactive applications, time-to-first-token matters enormously. Any architectural change that collapses the distinction between prefill and decode has the potential to flatten the latency curve.</p>
+
+<p>The 200x gap between theoretical and realized token throughput is not going away through incremental improvements to existing infrastructure. What is interesting about the current moment is that solutions are emerging simultaneously at every level of the stack: at the systems level (paged attention, continuous batching, prefix caching, quantization), at the algorithm level (speculative decoding, lookahead methods), and at the architecture level (diffusion LLMs, block diffusion, mixture-of-experts with sparse activation).</p>
+
+<div class="pullquote">The memory wall has been a known problem in high-performance computing for a long time before LLMs existed. What is new is that language model inference has made it a first-order economic problem. That is a different kind of pressure than academic interest. And it tends to produce results.</div>
+
+</article>
+
+<!-- REFS -->
+<div class="refs">
+  <h2>References</h2>
+  <ol>
+    <li><strong>Williams, Waterman, Patterson (2009).</strong> Roofline: An insightful visual performance model for multicore architectures. <em>Communications of the ACM, 52(4).</em></li>
+    <li><strong>Kwon et al. (2023).</strong> Efficient memory management for large language model serving with PagedAttention. <em>ACM SIGOPS.</em></li>
+    <li><strong>Zheng et al. (2024).</strong> SGLang: Efficient execution of structured language model programs. <em>NeurIPS 2024.</em></li>
+    <li><strong>Leviathan, Kalman, Matias (2023).</strong> Fast inference from transformers via speculative decoding. <em>ICML.</em></li>
+    <li><strong>Zhang et al. (2024).</strong> Draft and Verify: Lossless large language model acceleration via self-speculative decoding. <em>ACL 2024.</em></li>
+    <li><strong>Fu et al. (2024).</strong> Break the sequential dependency of LLM inference using Lookahead decoding. <em>arXiv:2402.02057.</em></li>
+    <li><strong>Austin et al. (2021).</strong> Structured denoising diffusion models in discrete state-spaces. <em>NeurIPS 2021.</em></li>
+    <li><strong>Nie et al. (2025).</strong> Large language diffusion models (LLaDA). <em>arXiv:2502.09992.</em></li>
+    <li><strong>Arriola et al. (2025).</strong> Block diffusion: Interpolating between autoregressive and diffusion language models. <em>ICLR 2025 (Oral). arXiv:2503.09573.</em></li>
+    <li><strong>Dettmers et al. (2022).</strong> LLM.int8(): 8-bit matrix multiplication for transformers at scale. <em>NeurIPS 2022.</em></li>
+  </ol>
+</div>
+
+<div class="footer">
+  Interactive explainer for <a href="https://medium.com/data-science-collective/the-memory-wall-is-strangling-your-llm-why-gpus-are-faster-than-you-think-and-slower-than-you-need-cfaf28226" target="_blank">"The Memory Wall Is Strangling Your LLM"</a> by Feroz Khan, Data Science Collective, May 2026.
+</div>
+
+</div><!-- .page -->
+
+<script>
+// ---- COLOR PALETTE ----
+const C = {
+  bg:'#faf9f7', surface:'#ffffff', s2:'#f3f2ef', s3:'#e9e7e2',
+  border:'rgba(0,0,0,0.09)', border2:'rgba(0,0,0,0.16)',
+  text:'#1c1b18', text2:'#54524b', text3:'#96938c',
+  accent:'#1a56db', teal:'#0f766e', amber:'#92400e',
+  coral:'#b91c1c', orange:'#c2410c',
+};
+const DPR = window.devicePixelRatio || 1;
+
+function setupCanvas(id, h) {
+  const el = document.getElementById(id);
+  const W = el.parentElement.clientWidth || el.parentElement.parentElement.clientWidth;
+  el.width = W * DPR; el.height = h * DPR;
+  el.style.width = W + 'px'; el.style.height = h + 'px';
+  const ctx = el.getContext('2d'); ctx.scale(DPR, DPR);
+  return [ctx, W, h];
+}
+
+function rr(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+function txt(ctx,t,x,y,col,size,align='left',weight=''){
+  ctx.fillStyle=col;
+  ctx.font=(weight?weight+' ':'')+size+'px "DM Mono",monospace';
+  ctx.textAlign=align;
+  ctx.fillText(t,x,y);
+}
+
+function ease(t){return t<.5?2*t*t:-1+(4-2*t)*t;}
+
+// =============================================
+// WIDGET 1: MEMORY HIERARCHY
+// =============================================
+let memRAF, memPkts=[];
+
+function initMem(){
+  if(memRAF) cancelAnimationFrame(memRAF);
+  const [ctx,W,H]=setupCanvas('c-mem',320);
+  memPkts=[];
+  for(let i=0;i<7;i++) memPkts.push({x:50+Math.random()*140,y:65+Math.random()*190,phase:'hbm',t:Math.random()*100,cuIdx:i%4});
+  animMem(ctx,W,H);
+}
+
+function animMem(ctx,W,H){
+  const HX=24,HW=190,HY=24,HH=276;
+  const SX=W*.44,SW=120,SY=80,SH=160;
+  const CX=W*.76,CY=44;
+  const PY=160;
+  let busy=0;
+
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+
+    // HBM box
+    ctx.fillStyle=C.s2; rr(ctx,HX,HY,HW,HH,10); ctx.fill();
+    ctx.strokeStyle='rgba(26,86,219,0.25)'; ctx.lineWidth=1; rr(ctx,HX,HY,HW,HH,10); ctx.stroke();
+    txt(ctx,'HBM',HX+HW/2,HY+20,C.accent,12,'center','500');
+    txt(ctx,'80 GB  3.35 TB/s',HX+HW/2,HY+36,C.text3,9,'center');
+    for(let i=0;i<10;i++){
+      const sy=HY+52+i*21;
+      ctx.fillStyle=i===3?'rgba(26,86,219,0.18)':'rgba(26,86,219,0.07)';
+      ctx.strokeStyle=i===3?'rgba(26,86,219,0.4)':'rgba(26,86,219,0.15)';
+      ctx.lineWidth=.5; rr(ctx,HX+12,sy,HW-24,15,3); ctx.fill(); ctx.stroke();
+      txt(ctx,'layer '+(i+1),HX+HW/2,sy+10.5,i===3?C.accent:C.text3,8,'center');
+    }
+
+    // Pipe
+    ctx.fillStyle='rgba(146,64,14,0.07)';
+    rr(ctx,HX+HW,PY-13,SX-HX-HW,26,4); ctx.fill();
+    ctx.strokeStyle='rgba(146,64,14,0.2)'; ctx.lineWidth=.5;
+    rr(ctx,HX+HW,PY-13,SX-HX-HW,26,4); ctx.stroke();
+    txt(ctx,'bandwidth pipe (bottleneck)',(HX+HW+SX)/2,PY-18,C.amber,9,'center');
+
+    // SRAM
+    ctx.fillStyle=C.s2; rr(ctx,SX,SY,SW,SH,8); ctx.fill();
+    ctx.strokeStyle='rgba(15,118,110,0.3)'; ctx.lineWidth=1; rr(ctx,SX,SY,SW,SH,8); ctx.stroke();
+    txt(ctx,'SRAM',SX+SW/2,SY+20,C.teal,12,'center','500');
+    txt(ctx,'50 MB on-chip',SX+SW/2,SY+34,C.text3,9,'center');
+
+    // SRAM to compute
+    ctx.strokeStyle=C.border2; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(SX+SW,PY); ctx.lineTo(CX,PY); ctx.stroke();
+
+    // Compute units
+    txt(ctx,'Tensor cores',CX+(W-CX)/2,CY-6,C.text2,10,'center');
+    busy=0;
+    memPkts.forEach(p=>{ if(p.phase==='compute') busy|=(1<<p.cuIdx); });
+
+    for(let i=0;i<4;i++){
+      const cy=CY+4+i*56;
+      const b=!!(busy&(1<<i));
+      ctx.fillStyle=b?'rgba(26,86,219,0.1)':'rgba(185,28,28,0.06)';
+      ctx.strokeStyle=b?'rgba(26,86,219,0.35)':'rgba(185,28,28,0.2)';
+      ctx.lineWidth=.5; rr(ctx,CX,cy,W-CX-16,44,6); ctx.fill(); ctx.stroke();
+      ctx.fillStyle=b?C.accent:C.coral;
+      ctx.font='500 10px "DM Mono"'; ctx.textAlign='center';
+      ctx.fillText(b?'computing':'waiting',CX+(W-CX-16)/2,cy+26);
+    }
+
+    // Packets
+    memPkts.forEach((p,i)=>{
+      p.t++;
+      if(p.phase==='hbm'){
+        ctx.fillStyle='rgba(26,86,219,0.65)';
+        rr(ctx,p.x-6,p.y-6,12,12,3); ctx.fill();
+        if(p.t>80+i*7){p.phase='transit';p.tp=0;p.sx=p.x;p.sy=p.y;p.t=0;}
+      } else if(p.phase==='transit'){
+        p.tp=Math.min(1,p.t/45);
+        const ex=ease(p.tp);
+        const cx=p.sx+(SX+SW/2-p.sx)*ex;
+        const cy=p.sy+(PY-p.sy)*ex;
+        ctx.fillStyle=C.amber;
+        ctx.shadowColor=C.amber; ctx.shadowBlur=6;
+        ctx.beginPath(); ctx.arc(cx,cy,5,0,Math.PI*2); ctx.fill();
+        ctx.shadowBlur=0;
+        if(p.tp>=1){p.phase='sram';p.t=0;}
+      } else if(p.phase==='sram'){
+        const sx=SX+12+(i%3)*32,sy=SY+50+Math.floor(i/3)*26;
+        ctx.fillStyle=C.teal; rr(ctx,sx,sy,22,16,3); ctx.fill();
+        if(p.t>24){p.phase='compute';p.t=0;}
+      } else if(p.phase==='compute'){
+        if(p.t>18){p.phase='hbm';p.x=50+Math.random()*140;p.y=65+Math.random()*190;p.t=Math.random()*60;}
+      }
+    });
+
+    memRAF=requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+// =============================================
+// WIDGET 2: DECODE
+// =============================================
+let decRunning=false,decToks=[],decCount=0,decRAF,decStart=null,decProg=0;
+const DEC_N=20;
+
+function toggleDecode(){
+  if(decCount>=DEC_N) return;
+  decRunning=!decRunning;
+  const btn=document.getElementById('btn-decode');
+  const pill=document.getElementById('dec-pill');
+  btn.textContent=decRunning?'Pause':'Resume';
+  pill.textContent=decRunning?'generating':'paused';
+  pill.className='spill'+(decRunning?' run':'');
+  if(decRunning){if(!decStart)decStart=Date.now();animDecode();}
+}
+
+function resetDecode(){
+  decRunning=false;decToks=[];decCount=0;decStart=null;decProg=0;
+  cancelAnimationFrame(decRAF);
+  document.getElementById('btn-decode').textContent='Generate tokens';
+  document.getElementById('tok-count').textContent='0';
+  document.getElementById('dec-pill').textContent='idle';
+  document.getElementById('dec-pill').className='spill';
+  drawDecodeFrame(0);
+}
+
+function drawDecodeFrame(prog){
+  const [ctx,W,H]=setupCanvas('c-decode',340);
+  ctx.clearRect(0,0,W,H);
+  const HX=14,HW=170,PIPE_Y=120;
+  const SX=W*.44,SW=100;
+  const CX=W*.72,CW=W-CX-14;
+
+  // HBM layers
+  txt(ctx,'HBM -- model weights (16 GB)',HX,18,C.text2,10);
+  for(let i=0;i<12;i++){
+    const active=Math.floor(prog*12)===i&&prog>0;
+    const sy=26+i*18;
+    ctx.fillStyle=active?'rgba(26,86,219,0.22)':'rgba(26,86,219,0.07)';
+    ctx.strokeStyle=active?C.accent:'rgba(26,86,219,0.18)';
+    ctx.lineWidth=active?1:.5;
+    rr(ctx,HX+2,sy,HW-4,13,3); ctx.fill(); ctx.stroke();
+    txt(ctx,active?'layer '+(i+1)+' -- loading':'layer '+(i+1),HX+HW/2,sy+9.5,active?C.accent:C.text3,8,'center');
+  }
+
+  // Pipe
+  const pipeW=SX-(HX+HW);
+  ctx.fillStyle='rgba(146,64,14,0.06)';
+  rr(ctx,HX+HW,PIPE_Y-14,pipeW,28,4); ctx.fill();
+  ctx.strokeStyle='rgba(146,64,14,0.2)'; ctx.lineWidth=.5;
+  rr(ctx,HX+HW,PIPE_Y-14,pipeW,28,4); ctx.stroke();
+
+  if(prog>0.05&&prog<0.78){
+    const t=(prog-0.05)/0.73;
+    const px=HX+HW+pipeW*ease(t);
+    ctx.fillStyle=C.amber; ctx.shadowColor=C.amber; ctx.shadowBlur=8;
+    ctx.beginPath(); ctx.arc(px,PIPE_Y,6,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    txt(ctx,'16 GB weight transfer',HX+HW+pipeW/2,PIPE_Y-18,C.amber,9,'center');
+  }
+
+  // SRAM
+  ctx.fillStyle=C.s2; rr(ctx,SX,66,SW,108,8); ctx.fill();
+  ctx.strokeStyle='rgba(15,118,110,0.3)'; ctx.lineWidth=1; rr(ctx,SX,66,SW,108,8); ctx.stroke();
+  txt(ctx,'SRAM',SX+SW/2,88,C.teal,11,'center','500');
+  txt(ctx,'50 MB',SX+SW/2,104,C.text3,9,'center');
+
+  // Compute
+  const busy=prog>0.72;
+  ctx.fillStyle=busy?'rgba(26,86,219,0.09)':'rgba(185,28,28,0.05)';
+  ctx.strokeStyle=busy?'rgba(26,86,219,0.3)':'rgba(185,28,28,0.18)';
+  ctx.lineWidth=.5; rr(ctx,CX,56,CW,128,8); ctx.fill(); ctx.stroke();
+  txt(ctx,'H100 tensor cores',CX+CW/2,76,C.text2,9,'center');
+  ctx.fillStyle=busy?C.accent:C.coral;
+  ctx.font='500 12px "DM Mono"'; ctx.textAlign='center';
+  ctx.fillText(busy?'computing':'waiting',CX+CW/2,112);
+
+  // Output tokens
+  txt(ctx,'output tokens:',14,234,C.text3,10);
+  const cols=10,tw=Math.min(48,(W-28)/cols-2);
+  decToks.slice(-20).forEach((t,i)=>{
+    const tx=14+i*(tw+2),ty=244;
+    ctx.fillStyle='rgba(15,118,110,0.12)'; ctx.strokeStyle='rgba(15,118,110,0.3)'; ctx.lineWidth=.5;
+    rr(ctx,tx,ty,tw,20,4); ctx.fill(); ctx.stroke();
+    txt(ctx,'t'+t,tx+tw/2,ty+13.5,C.teal,9,'center');
+  });
+  if(prog>0.83&&decCount<DEC_N){
+    const a=(prog-0.83)/0.17, ni=decToks.length;
+    const tx=14+ni*(tw+2),ty=244;
+    ctx.globalAlpha=a;
+    ctx.fillStyle='rgba(26,86,219,0.15)'; ctx.strokeStyle=C.accent; ctx.lineWidth=.5;
+    rr(ctx,tx,ty,tw,20,4); ctx.fill(); ctx.stroke();
+    txt(ctx,'t'+(ni+1),tx+tw/2,ty+13.5,C.accent,9,'center');
+    ctx.globalAlpha=1;
+  }
+  txt(ctx,'Each token = full 16 GB sweep  =>  ~200 tok/s ceiling',W/2,322,C.text3,10,'center');
+}
+
+function animDecode(){
+  if(!decRunning||decCount>=DEC_N) return;
+  decProg+=0.018;
+  if(decProg>=1){
+    decProg=0; decCount++;
+    decToks.push(decCount);
+    document.getElementById('tok-count').textContent=decCount;
+    if(decCount>=DEC_N){
+      decRunning=false;
+      document.getElementById('btn-decode').textContent='Done';
+      document.getElementById('dec-pill').textContent='done';
+      document.getElementById('dec-pill').className='spill done';
+    }
+  }
+  drawDecodeFrame(decProg);
+  if(decRunning) decRAF=requestAnimationFrame(animDecode);
+}
+
+// =============================================
+// WIDGET 3: BATCH
+// =============================================
+let batchN=1;
+function updateBatch(v){
+  batchN=parseInt(v);
+  document.getElementById('batch-val').textContent=v;
+  const arith=batchN;
+  const kv=Math.min(91,Math.round(batchN*1.4));
+  const tput=batchN<=32?batchN:Math.max(1,Math.round(32*(1-(batchN-32)/80)));
+  document.getElementById('arith-val').textContent=arith+'x';
+  document.getElementById('kv-val').textContent=kv+'%';
+  document.getElementById('tput-val').textContent=tput+'x';
+  const kc=document.getElementById('kv-card');
+  kc.className='stat-box'+(kv>55?' warn':'');
+  drawBatch();
+}
+
+function drawBatch(){
+  const [ctx,W,H]=setupCanvas('c-batch',360);
+  ctx.clearRect(0,0,W,H);
+  const BX=14,BW=W-28,BY=36,BH=26;
+  const wF=0.20,kvF=Math.min(0.76,batchN*0.014);
+  const freeF=1-wF-kvF;
+
+  txt(ctx,'HBM allocation  (80 GB total)',BX,BY-8,C.text2,10);
+
+  // Weights
+  ctx.fillStyle='rgba(26,86,219,0.12)'; ctx.strokeStyle='rgba(26,86,219,0.35)'; ctx.lineWidth=.5;
+  rr(ctx,BX,BY,BW*wF,BH,4); ctx.fill(); ctx.stroke();
+  txt(ctx,'Weights 16 GB',BX+BW*wF/2,BY+16.5,C.accent,9,'center');
+
+  // KV cache
+  const kvX=BX+BW*wF+2;
+  ctx.fillStyle='rgba(146,64,14,0.14)'; ctx.strokeStyle='rgba(146,64,14,0.35)'; ctx.lineWidth=.5;
+  if(kvF>0.005){rr(ctx,kvX,BY,BW*kvF,BH,4); ctx.fill(); ctx.stroke();}
+  if(kvF>0.05) txt(ctx,'KV cache',kvX+BW*kvF/2,BY+16.5,C.amber,9,'center');
+
+  // Free
+  if(freeF>0.02){
+    const fx=kvX+BW*kvF+2;
+    ctx.fillStyle='rgba(0,0,0,0.03)'; ctx.strokeStyle=C.border; ctx.lineWidth=.5;
+    rr(ctx,fx,BY,BW*freeF-2,BH,4); ctx.fill(); ctx.stroke();
+    if(freeF>0.08) txt(ctx,'free',fx+(BW*freeF-2)/2,BY+16.5,C.text3,9,'center');
+  }
+
+  // Chart: arithmetic intensity
+  const CY=86,CH=72;
+  txt(ctx,'Arithmetic intensity vs batch size',BX,CY-8,C.text2,10);
+  ctx.fillStyle='rgba(0,0,0,0.02)'; rr(ctx,BX,CY,BW,CH,6); ctx.fill();
+  ctx.strokeStyle='rgba(15,118,110,0.7)'; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  for(let b=1;b<=64;b++){
+    const x=BX+BW*(b-1)/63;
+    const y=CY+CH-Math.min(1,b/32)*CH*.88;
+    b===1?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  const mx=BX+BW*(batchN-1)/63;
+  const my=CY+CH-Math.min(1,batchN/32)*CH*.88;
+  ctx.fillStyle=C.teal; ctx.beginPath(); ctx.arc(mx,my,5,0,Math.PI*2); ctx.fill();
+  txt(ctx,'batch '+batchN,mx+8,my+4,C.teal,9);
+
+  // Chart: KV pressure
+  const KY=178,KH=72;
+  txt(ctx,'KV cache pressure vs batch size',BX,KY-8,C.text2,10);
+  ctx.fillStyle='rgba(0,0,0,0.02)'; rr(ctx,BX,KY,BW,KH,6); ctx.fill();
+  ctx.strokeStyle='rgba(146,64,14,0.7)'; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  for(let b=1;b<=64;b++){
+    const x=BX+BW*(b-1)/63;
+    const kv=Math.min(1,b*0.014/0.76);
+    const y=KY+KH-kv*KH*.9;
+    b===1?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  const ky=KY+KH-Math.min(1,batchN*0.014/0.76)*KH*.9;
+  ctx.fillStyle=C.amber; ctx.beginPath(); ctx.arc(mx,ky,5,0,Math.PI*2); ctx.fill();
+  txt(ctx,'batch '+batchN,mx+8,ky+4,C.amber,9);
+
+  // Query rows
+  txt(ctx,'Queries sharing one weight stream:',BX,268,C.text2,10);
+  const rows=Math.min(batchN,7),rh=Math.min(26,(H-278)/rows-2);
+  for(let i=0;i<rows;i++){
+    const ry=276+i*(rh+2);
+    ctx.fillStyle='rgba(15,118,110,0.07)'; ctx.strokeStyle='rgba(15,118,110,0.2)'; ctx.lineWidth=.5;
+    rr(ctx,BX,ry,BW,rh,4); ctx.fill(); ctx.stroke();
+    txt(ctx,'Query '+(i+1)+' -- generating output tokens',BX+10,ry+rh/2+4,C.teal,10);
+  }
+  if(batchN>7) txt(ctx,'+ '+(batchN-7)+' more...',W/2,276+7*(rh+2)+12,C.text3,10,'center');
+}
+
+// =============================================
+// WIDGET 4: SPECULATIVE
+// =============================================
+function updateSpec(){
+  const d=parseInt(document.getElementById('draft-sl').value);
+  const a=parseInt(document.getElementById('acc-sl').value)/100;
+  document.getElementById('draft-val').textContent=d;
+  document.getElementById('acc-val').textContent=Math.round(a*100)+'%';
+
+  let exp=0;
+  for(let i=0;i<d;i++) exp+=Math.pow(a,i);
+  exp=Math.min(d,exp);
+  document.getElementById('spec-acc').textContent=exp.toFixed(1);
+  document.getElementById('spec-spd').textContent=exp.toFixed(1)+'x';
+
+  const wc=document.getElementById('spec-w-card');
+  const wv=document.getElementById('spec-warn');
+  const ws=document.getElementById('spec-wsub');
+  if(a<0.5){wc.className='stat-box warn';wv.textContent='poor';ws.textContent='slower than naive decode';}
+  else if(a<0.7){wc.className='stat-box';wv.textContent='moderate';ws.textContent='marginal gains';}
+  else{wc.className='stat-box hi';wv.textContent='good';ws.textContent='meaningful speedup';}
+
+  drawSpec(d,a,exp);
+}
+
+function drawSpec(dLen,acc,exp){
+  const [ctx,W,H]=setupCanvas('c-spec',380);
+  ctx.clearRect(0,0,W,H);
+  const TW=Math.min(50,(W-200)/dLen-4),TX=180;
+  const accepted=Math.min(dLen,Math.round(exp));
+
+  // Draft model
+  ctx.fillStyle=C.s2; ctx.strokeStyle='rgba(146,64,14,0.3)'; ctx.lineWidth=1;
+  rr(ctx,14,52,130,42,8); ctx.fill(); ctx.stroke();
+  txt(ctx,'Draft LLM',79,68,C.amber,12,'center','500');
+  txt(ctx,'small, fast',79,82,C.text3,9,'center');
+
+  // Proposed tokens
+  txt(ctx,'Proposes '+dLen+' candidate tokens:',TX,44,C.text3,9);
+  for(let i=0;i<dLen;i++){
+    const tx=TX+i*(TW+4);
+    ctx.fillStyle='rgba(146,64,14,0.1)'; ctx.strokeStyle='rgba(146,64,14,0.35)'; ctx.lineWidth=.5;
+    rr(ctx,tx,52,TW,32,5); ctx.fill(); ctx.stroke();
+    txt(ctx,'t'+(i+1),tx+TW/2,72,C.amber,10,'center');
+  }
+
+  // Arrow
+  const midX=TX+(dLen*(TW+4))/2;
+  ctx.strokeStyle='rgba(26,86,219,0.25)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(midX,86); ctx.lineTo(midX,132); ctx.stroke();
+  ctx.fillStyle='rgba(26,86,219,0.35)';
+  ctx.beginPath(); ctx.moveTo(midX,132); ctx.lineTo(midX-5,122); ctx.lineTo(midX+5,122); ctx.closePath(); ctx.fill();
+  txt(ctx,'1 forward pass (like prefill)',midX,120,C.accent,9,'center');
+
+  // Verifier
+  ctx.fillStyle=C.s2; ctx.strokeStyle='rgba(26,86,219,0.4)'; ctx.lineWidth=1.5;
+  rr(ctx,14,136,130,48,8); ctx.fill(); ctx.stroke();
+  txt(ctx,'Verifier LLM',79,154,C.accent,12,'center','500');
+  txt(ctx,'large model',79,168,C.text3,9,'center');
+
+  // Accepted row
+  txt(ctx,'Accepts '+accepted+'/'+dLen+' ('+Math.round(acc*100)+'% rate):',TX,130,C.text3,9);
+  for(let i=0;i<dLen;i++){
+    const tx=TX+i*(TW+4);
+    const ok=i<accepted;
+    ctx.fillStyle=ok?'rgba(15,118,110,0.12)':'rgba(185,28,28,0.07)';
+    ctx.strokeStyle=ok?'rgba(15,118,110,0.4)':'rgba(185,28,28,0.25)';
+    ctx.lineWidth=ok?1:.5;
+    rr(ctx,tx,140,TW,38,5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=ok?C.teal:C.coral;
+    ctx.font='500 13px "DM Mono"'; ctx.textAlign='center';
+    ctx.fillText(ok?'v':'x',tx+TW/2,163);
+    txt(ctx,'t'+(i+1),tx+TW/2,174,ok?C.teal:C.text3,9,'center');
+  }
+
+  // Speedup callout
+  const sx=TX+dLen*(TW+4)+16;
+  if(sx+110<W){
+    ctx.fillStyle='rgba(26,86,219,0.06)'; ctx.strokeStyle='rgba(26,86,219,0.18)'; ctx.lineWidth=.5;
+    rr(ctx,sx,140,W-sx-14,76,6); ctx.fill(); ctx.stroke();
+    txt(ctx,'speedup:',sx+10,162,C.text3,9);
+    ctx.fillStyle=C.accent; ctx.font='500 22px "DM Mono"'; ctx.textAlign='left';
+    ctx.fillText(exp.toFixed(1)+'x',sx+10,190);
+    txt(ctx,'vs naive',sx+10,204,C.text3,9);
+  }
+
+  // Comparison
+  const CY=242;
+  ctx.strokeStyle=C.border; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(14,CY); ctx.lineTo(W-14,CY); ctx.stroke();
+  txt(ctx,'Naive decode: 1 token per heavy forward pass',14,CY+18,C.text3,10);
+  ctx.fillStyle=C.coral; rr(ctx,14,CY+26,TW,22,4); ctx.fill();
+  txt(ctx,'t1',14+TW/2,CY+40,'#fff',9,'center');
+  txt(ctx,'<= 1 forward pass',14+TW+8,CY+40,C.text3,9);
+
+  txt(ctx,'Speculative: '+accepted+' tokens per heavy forward pass',14,CY+60,C.text3,10);
+  for(let i=0;i<accepted;i++){
+    ctx.fillStyle=C.teal; rr(ctx,14+i*(TW+2),CY+68,TW,22,4); ctx.fill();
+    txt(ctx,'t'+(i+1),14+i*(TW+2)+TW/2,CY+82,'#fff',9,'center');
+  }
+  txt(ctx,'<= 1 forward pass',14+accepted*(TW+2)+8,CY+82,C.text3,9);
+}
+
+// =============================================
+// WIDGET 5: DIFFUSION vs AR vs BLOCK
+// =============================================
+const DTOKS=20,DSTEPS=5,BSIZ=5;
+let diffMode=null,arT=0,diffT=0,blkT=0,blkStep=0,diffRAF;
+let arSt=[],difSt=[],blkSt=[];
+
+function initDiff(){
+  arSt=Array(DTOKS).fill('empty');
+  difSt=Array(DTOKS).fill(0);
+  blkSt=Array(DTOKS).fill(0);
+  arT=0;diffT=0;blkT=0;blkStep=0;
+}
+
+function resetDiff(){
+  clearTimeout(diffRAF);diffMode=null;initDiff();
+  document.getElementById('ar-passes').textContent='0';
+  document.getElementById('diff-steps').textContent='0';
+  document.getElementById('diff-regime').textContent='--';
+  document.getElementById('diff-regime').style.fontSize='22px';
+  setDiffPill('idle','');
+  drawDiff();
+}
+
+function setDiffPill(t,cls){
+  const p=document.getElementById('diff-pill');
+  p.textContent=t; p.className='spill'+(cls?' '+cls:'');
+}
+
+function runARDiff(){
+  clearTimeout(diffRAF);diffMode='ar';arT=0;arSt=Array(DTOKS).fill('empty');
+  document.getElementById('diff-regime').textContent='memory-bound';
+  document.getElementById('diff-regime').style.fontSize='13px';
+  setDiffPill('AR running','run');
+  stepAR();
+}
+function stepAR(){
+  if(arT>=DTOKS){setDiffPill('AR done -- '+DTOKS+' passes','done');return;}
+  arSt[arT]='done';arT++;
+  document.getElementById('ar-passes').textContent=arT;
+  drawDiff(); diffRAF=setTimeout(stepAR,180);
+}
+
+function runDiff(){
+  clearTimeout(diffRAF);diffMode='diff';diffT=0;difSt=Array(DTOKS).fill(0);
+  document.getElementById('diff-regime').textContent='compute-bound';
+  document.getElementById('diff-regime').style.fontSize='13px';
+  setDiffPill('Diffusion running','run');
+  stepDiff();
+}
+function stepDiff(){
+  if(diffT>=DSTEPS){setDiffPill('Done -- '+DSTEPS+' steps, all '+DTOKS+' tokens','done');return;}
+  diffT++;
+  const c=diffT/DSTEPS;
+  difSt=difSt.map(()=>c);
+  document.getElementById('diff-steps').textContent=diffT;
+  drawDiff(); diffRAF=setTimeout(stepDiff,600);
+}
+
+function runBlock(){
+  clearTimeout(diffRAF);diffMode='block';blkT=0;blkStep=0;blkSt=Array(DTOKS).fill(0);
+  document.getElementById('diff-regime').textContent='hybrid';
+  document.getElementById('diff-regime').style.fontSize='22px';
+  setDiffPill('Block diffusion running','run');
+  stepBlock(0,0);
+}
+function stepBlock(bi,si){
+  const start=bi*BSIZ,end=Math.min(start+BSIZ,DTOKS);
+  if(start>=DTOKS){setDiffPill('Block diffusion done','done');return;}
+  const maxS=3,c=(si+1)/maxS;
+  for(let i=start;i<end;i++) blkSt[i]=c;
+  document.getElementById('diff-steps').textContent=bi*maxS+(si+1);
+  drawDiff();
+  if(si+1<maxS) diffRAF=setTimeout(()=>stepBlock(bi,si+1),380);
+  else diffRAF=setTimeout(()=>stepBlock(bi+1,0),550);
+}
+
+function lerpCol(c1,c2,t){
+  const h=s=>parseInt(s,16);
+  const r=Math.round(h(c1.slice(1,3))*(1-t)+h(c2.slice(1,3))*t);
+  const g=Math.round(h(c1.slice(3,5))*(1-t)+h(c2.slice(3,5))*t);
+  const b=Math.round(h(c1.slice(5,7))*(1-t)+h(c2.slice(5,7))*t);
+  return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+function drawDiff(){
+  const [ctx,W,H]=setupCanvas('c-diff',400);
+  ctx.clearRect(0,0,W,H);
+  const cols=DTOKS,TW=Math.floor((W-28)/cols)-2,TX=14;
+  const RH=30;
+
+  function row(states,y,mode){
+    for(let i=0;i<DTOKS;i++){
+      const tx=TX+i*(TW+2);
+      let fill,stroke,tc,label;
+      if(mode==='ar'){
+        const done=states[i]==='done';
+        fill=done?'rgba(15,118,110,0.15)':'rgba(0,0,0,0.03)';
+        stroke=done?'rgba(15,118,110,0.4)':C.border;
+        tc=done?C.teal:C.text3; label=done?'t'+(i+1):'--';
+      } else if(mode==='diff'){
+        const c=states[i]||0;
+        fill='rgba(26,86,219,'+(0.04+c*0.2)+')';
+        stroke=c>0?'rgba(26,86,219,'+(c*0.6)+')':C.border;
+        tc=c>0.7?C.accent:C.text3; label=c===0?'?':c>=1?'t'+(i+1):'~';
+      } else {
+        const c=states[i]||0;
+        const bi=Math.floor(i/BSIZ);
+        const cols2=['rgba(15,118,110,','rgba(26,86,219,','rgba(194,65,12,','rgba(146,64,14,'];
+        const base=cols2[bi%cols2.length];
+        fill=c>0?base+(0.05+c*0.18)+')':'rgba(0,0,0,0.03)';
+        stroke=c>0?base+(c*0.5)+')':C.border;
+        tc=c>0.5?C.text:C.text3; label=c===0?'?':c>=1?'t'+(i+1):'~';
+      }
+      ctx.fillStyle=fill; ctx.strokeStyle=stroke; ctx.lineWidth=.5;
+      rr(ctx,tx,y,TW,RH,4); ctx.fill(); ctx.stroke();
+      txt(ctx,label,tx+TW/2,y+RH/2+4,tc,9,'center');
+    }
+  }
+
+  // AR row
+  txt(ctx,'Autoregressive  (memory-bound -- 1 token per forward pass)',TX,18,C.text2,10);
+  ctx.fillStyle='rgba(185,28,28,0.04)'; ctx.strokeStyle='rgba(185,28,28,0.1)'; ctx.lineWidth=.5;
+  rr(ctx,TX-2,26,W-28+4,RH+4,6); ctx.fill(); ctx.stroke();
+  row(arSt,28,'ar');
+  txt(ctx,arT+' / '+DTOKS+' tokens  |  '+arT+' passes',W-14,72,C.coral,9,'right');
+
+  // Diffusion row
+  txt(ctx,'Diffusion  (compute-bound -- all tokens per step)',TX,98,C.text2,10);
+  ctx.fillStyle='rgba(26,86,219,0.04)'; ctx.strokeStyle='rgba(26,86,219,0.1)'; ctx.lineWidth=.5;
+  rr(ctx,TX-2,106,W-28+4,RH+4,6); ctx.fill(); ctx.stroke();
+  row(difSt,108,'diff');
+  txt(ctx,'step '+diffT+' / '+DSTEPS+'  |  all '+DTOKS+' positions per step',W-14,150,C.accent,9,'right');
+
+  // Block diffusion row
+  txt(ctx,'Block diffusion  (hybrid -- diffusion within blocks, AR across)',TX,176,C.text2,10);
+  // block boundaries
+  ctx.strokeStyle='rgba(0,0,0,0.1)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  for(let b=1;b<DTOKS/BSIZ;b++){
+    const bx=TX+b*BSIZ*(TW+2)-2;
+    ctx.beginPath(); ctx.moveTo(bx,184); ctx.lineTo(bx,184+RH+4); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(0,0,0,0.02)'; ctx.strokeStyle=C.border; ctx.lineWidth=.5;
+  rr(ctx,TX-2,184,W-28+4,RH+4,6); ctx.fill(); ctx.stroke();
+  row(blkSt,186,'block');
+  txt(ctx,'block size '+BSIZ+' -- KV cache usable across blocks',W-14,228,C.teal,9,'right');
+
+  // Pass comparison
+  const CY=252;
+  ctx.strokeStyle=C.border; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(14,CY); ctx.lineTo(W-14,CY); ctx.stroke();
+  txt(ctx,'Forward passes needed for '+DTOKS+' output tokens:',14,CY+14,C.text2,10);
+  const methods=[
+    {label:'AR decode',passes:DTOKS,color:C.coral},
+    {label:'Diffusion ('+DSTEPS+' steps)',passes:DSTEPS,color:C.accent},
+    {label:'Block diffusion',passes:Math.ceil(DTOKS/BSIZ)*3,color:C.teal},
+  ];
+  const maxP=DTOKS, barW=(W-180)*.85;
+  methods.forEach((m,i)=>{
+    const by=CY+26+i*38;
+    txt(ctx,m.label,14,by+13,C.text2,10);
+    const bw=barW*(m.passes/maxP);
+    ctx.fillStyle=m.color+'22'; ctx.strokeStyle=m.color+'66'; ctx.lineWidth=.5;
+    rr(ctx,160,by,bw,22,4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=m.color; ctx.font='500 11px "DM Mono"'; ctx.textAlign='left';
+    ctx.fillText(m.passes+' passes',160+bw+8,by+14);
+  });
+}
+
+// =============================================
+// WIDGET 6: ROOFLINE
+// =============================================
+const RPTS=[
+  {label:'AR decode\n(single query)',logX:.05,logY:2.4,color:C.coral,desc:'Memory-bound\n~0.1 FLOP/byte\n~200 tok/s ceiling'},
+  {label:'AR decode\n(large batch)',logX:.8,logY:3.1,color:C.orange,desc:'Batching raises intensity\nbut still memory-bound'},
+  {label:'Speculative\ndecoding',logX:1.3,logY:3.6,color:C.amber,desc:'Higher intensity\npushes toward ridge point'},
+  {label:'Diffusion LLM\n(block)',logX:2.3,logY:5.0,color:C.accent,desc:'Compute-bound\nAll tokens updated per step'},
+  {label:'Prefill\n(encode)',logX:2.9,logY:5.7,color:C.teal,desc:'Compute-bound\nAll prompt tokens in parallel'},
+];
+let roofHov=-1;
+
+function drawRoofline(){
+  const [ctx,W,H]=setupCanvas('c-roof',400);
+  ctx.clearRect(0,0,W,H);
+  const PL=64,PR=16,PT=24,PB=52;
+  const PW=W-PL-PR,pH=H-PT-PB;
+  const xMn=0,xMx=3.5,yMn=2,yMx=6.2;
+  const px=lx=>PL+(lx-xMn)/(xMx-xMn)*PW;
+  const py=ly=>PT+pH-(ly-yMn)/(yMx-yMn)*pH;
+  const BWS=Math.log10(3350),PC=6,rdg=PC-BWS;
+
+  // Grid
+  ctx.strokeStyle='rgba(0,0,0,0.05)'; ctx.lineWidth=.5;
+  for(let x=0;x<=3;x++){ctx.beginPath();ctx.moveTo(px(x),PT);ctx.lineTo(px(x),PT+pH);ctx.stroke();}
+  for(let y=2;y<=6;y++){ctx.beginPath();ctx.moveTo(PL,py(y));ctx.lineTo(PL+PW,py(y));ctx.stroke();}
+
+  // Shading: memory-bound region
+  ctx.fillStyle='rgba(26,86,219,0.04)';
+  ctx.beginPath();
+  ctx.moveTo(px(xMn),py(yMn));
+  ctx.lineTo(px(xMn),Math.min(py(xMn+BWS),py(yMn)));
+  if(rdg<xMx) ctx.lineTo(px(rdg),py(PC));
+  ctx.lineTo(px(Math.min(rdg,xMx)),py(yMn));
+  ctx.closePath(); ctx.fill();
+
+  // BW slope
+  ctx.strokeStyle=C.accent; ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(px(xMn),py(Math.min(yMx,xMn+BWS)));
+  if(rdg<=xMx) ctx.lineTo(px(rdg),py(PC));
+  else ctx.lineTo(px(xMx),py(xMx+BWS));
+  ctx.stroke();
+
+  // Compute ceiling
+  ctx.beginPath();
+  ctx.moveTo(px(Math.min(rdg,xMx)),py(PC));
+  ctx.lineTo(px(xMx),py(PC));
+  ctx.stroke();
+
+  // Ridge dashed
+  ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=.5; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(px(rdg),py(PC)); ctx.lineTo(px(rdg),py(yMn)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Labels
+  txt(ctx,'memory-bound',px(.5),py(yMx-.1),'rgba(26,86,219,0.45)',10);
+  txt(ctx,'compute-bound',px(xMx)-4,py(yMx-.1),'rgba(26,86,219,0.45)',10,'right');
+  txt(ctx,'ridge',px(rdg)+4,py(yMn)+12,C.text3,9);
+  txt(ctx,'H100 roofline  3.35 TB/s',px(xMx)-4,py(PC)-8,C.accent,9,'right');
+
+  // Axes
+  ctx.strokeStyle=C.border2; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(PL,PT); ctx.lineTo(PL,PT+pH); ctx.lineTo(PL+PW,PT+pH); ctx.stroke();
+  [0,1,2,3].forEach(v=>{
+    txt(ctx,'10^'+v,px(v),PT+pH+16,C.text3,9,'center');
+    ctx.strokeStyle=C.border2; ctx.lineWidth=.5;
+    ctx.beginPath(); ctx.moveTo(px(v),PT+pH); ctx.lineTo(px(v),PT+pH+4); ctx.stroke();
+  });
+  [2,3,4,5,6].forEach(v=>{
+    txt(ctx,'10^'+v,PL-5,py(v)+4,C.text3,9,'right');
+    ctx.beginPath(); ctx.moveTo(PL-3,py(v)); ctx.lineTo(PL,py(v)); ctx.stroke();
+  });
+  txt(ctx,'Arithmetic intensity (FLOP / byte)',PL+PW/2,H-10,C.text3,10,'center');
+  ctx.save(); ctx.translate(13,PT+pH/2); ctx.rotate(-Math.PI/2);
+  txt(ctx,'Performance (GFLOP/s)',0,0,C.text3,10,'center');
+  ctx.restore();
+
+  // Points
+  RPTS.forEach((p,i)=>{
+    const cx=px(p.logX),cy=py(p.logY);
+    const hov=roofHov===i,r=hov?11:8;
+    ctx.shadowColor=p.color; ctx.shadowBlur=hov?12:5;
+    ctx.fillStyle=p.color;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    if(hov){ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();}
+    const lines=p.label.split('\n');
+    const lx=p.logX<2?cx+13:cx-(lines.reduce((m,l)=>Math.max(m,l.length),0)*5.8+6);
+    lines.forEach((l,li)=>{
+      txt(ctx,l,lx,cy+(li-lines.length/2+.5)*13,p.color,9,'left');
+    });
+  });
+}
+
+function setupRoofHover(){
+  const canvas=document.getElementById('c-roof');
+  const W=canvas.parentElement.clientWidth,H=400;
+  const PL=64,PR=16,PT=24,PB=52;
+  const PW=W-PL-PR,pH=H-PT-PB;
+  const xMn=0,xMx=3.5,yMn=2,yMx=6.2;
+  const px=lx=>PL+(lx-xMn)/(xMx-xMn)*PW;
+  const py=ly=>PT+pH-(ly-yMn)/(yMx-yMn)*pH;
+  const tip=document.getElementById('tip-roof');
+
+  canvas.onmousemove=e=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    let near=-1,minD=28;
+    RPTS.forEach((p,i)=>{
+      const d=Math.hypot(mx-px(p.logX),my-py(p.logY));
+      if(d<minD){minD=d;near=i;}
+    });
+    if(near!==roofHov){roofHov=near;drawRoofline();}
+    if(near>=0){
+      const p=RPTS[near];
+      tip.style.display='block';
+      tip.style.left=(px(p.logX)+(p.logX<2?14:-130))+'px';
+      tip.style.top=(py(p.logY)-10)+'px';
+      tip.innerHTML=p.desc.replace(/\n/g,'<br>');
+    } else {tip.style.display='none';}
+  };
+  canvas.onmouseleave=()=>{roofHov=-1;drawRoofline();tip.style.display='none';};
+}
+
+// =============================================
+// INIT
+// =============================================
+function initAll(){
+  initMem();
+  drawDecodeFrame(0);
+  updateBatch(1);
+  updateSpec();
+  initDiff(); drawDiff();
+  drawRoofline(); setupRoofHover();
+}
+
+window.addEventListener('load',()=>{
+  initAll();
+});
+
+window.addEventListener('resize',()=>{
+  initMem();
+  drawDecodeFrame(decProg);
+  drawBatch();
+  updateSpec();
+  drawDiff();
+  drawRoofline();
+  setupRoofHover();
+});
+</script>
+</body>
+</html>
