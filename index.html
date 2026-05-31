@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Memory Wall - Interactive Explainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f9f8f6;
+  --surface: #ffffff;
+  --surface2: #f2f1ef;
+  --surface3: #e8e6e1;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.15);
+  --text: #1a1917;
+  --text2: #5a5750;
+  --text3: #9a9790;
+  --accent: #2563eb;
+  --accent2: #1d4ed8;
+  --teal: #0d9488;
+  --amber: #b45309;
+  --coral: #dc2626;
+  --blue: #2563eb;
+  --green: #16a34a;
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --r: 10px;
+  --r-lg: 16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* no overlay on light theme */
+
+/* ===== LAYOUT ===== */
+.page { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 0 24px 80px; }
+
+/* ===== HERO ===== */
+.hero {
+  padding: 72px 0 56px;
+  border-bottom: 1px solid var(--border);
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 400; letter-spacing: .12em;
+  color: var(--accent2); text-transform: uppercase;
+  background: rgba(37,99,235,.07); border: 1px solid rgba(37,99,235,.18);
+  padding: 5px 12px; border-radius: 100px; margin-bottom: 28px;
+}
+.hero-eyebrow::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--accent2); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 400; font-style: italic;
+  line-height: 1.12;
+  letter-spacing: -.01em;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+.hero h1 em { color: var(--accent2); font-style: italic; }
+.hero-sub {
+  font-size: 16px; color: var(--text2); max-width: 560px; line-height: 1.7;
+  margin-bottom: 36px;
+}
+.hero-stats {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 1px;
+  background: var(--border); border: 1px solid var(--border);
+  border-radius: var(--r-lg); overflow: hidden; max-width: 560px;
+}
+.hero-stat {
+  background: var(--surface); padding: 18px 20px;
+}
+.hero-stat-num {
+  font-family: var(--font-mono); font-size: 26px; font-weight: 500;
+  color: var(--accent2); line-height: 1; margin-bottom: 4px;
+}
+.hero-stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; }
+
+/* ===== NAV TABS ===== */
+.tab-nav {
+  display: flex; gap: 2px; padding: 20px 0 0;
+  overflow-x: auto; scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--bg); z-index: 10;
+  padding-bottom: 0;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+.tab-btn {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--font-body); font-size: 13px; font-weight: 400;
+  color: var(--text3); background: none; border: none; cursor: pointer;
+  padding: 10px 16px; white-space: nowrap;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color .2s, border-color .2s;
+}
+.tab-btn:hover { color: var(--text2); }
+.tab-btn.active { color: var(--accent2); border-bottom-color: var(--accent2); font-weight: 500; }
+.tab-num {
+  font-family: var(--font-mono); font-size: 10px;
+  background: var(--surface2); padding: 2px 6px; border-radius: 4px; color: var(--text3);
+}
+.tab-btn.active .tab-num { background: rgba(37,99,235,.1); color: var(--accent2); }
+
+/* ===== SECTIONS ===== */
+.section { display: none; padding: 48px 0; }
+.section.active { display: block; }
+
+.section-header { margin-bottom: 32px; }
+.section-label {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em;
+  color: var(--accent); text-transform: uppercase; margin-bottom: 10px;
+}
+.section-title {
+  font-family: var(--font-display); font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 400; font-style: italic; color: var(--text); line-height: 1.2;
+  margin-bottom: 12px;
+}
+.section-desc { font-size: 14px; color: var(--text2); max-width: 600px; line-height: 1.7; }
+
+/* ===== CANVAS CARD ===== */
+.canvas-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  position: relative;
+}
+.canvas-card canvas { display: block; width: 100%; }
+.canvas-label {
+  position: absolute; top: 12px; right: 14px;
+  font-family: var(--font-mono); font-size: 10px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+}
+
+/* ===== CONTROLS ===== */
+.controls {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 14px 16px;
+  background: var(--surface2); border-top: 1px solid var(--border);
+  font-size: 13px; color: var(--text2);
+}
+.ctrl-label { font-family: var(--font-mono); font-size: 11px; color: var(--text3); }
+input[type=range] {
+  flex: 1; min-width: 80px; height: 3px; accent-color: var(--accent2);
+  background: var(--surface3); border-radius: 2px; outline: none; cursor: pointer;
+}
+.ctrl-val { font-family: var(--font-mono); font-size: 13px; color: var(--accent2); min-width: 52px; }
+.btn {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em;
+  padding: 7px 16px; border-radius: var(--r);
+  background: rgba(37,99,235,.07); border: 1px solid rgba(37,99,235,.2);
+  color: var(--accent2); cursor: pointer; transition: all .15s;
+}
+.btn:hover { background: rgba(37,99,235,.13); border-color: rgba(37,99,235,.35); }
+.btn:active { transform: scale(.97); }
+.btn.secondary { background: var(--surface2); border-color: var(--border2); color: var(--text2); }
+.btn.secondary:hover { border-color: var(--border); color: var(--text); }
+.status-pill {
+  font-family: var(--font-mono); font-size: 11px; padding: 4px 10px;
+  border-radius: 100px; background: var(--surface2); color: var(--text3);
+}
+.status-pill.running { background: rgba(13,148,136,.08); color: var(--teal); border: 1px solid rgba(13,148,136,.2); }
+.status-pill.done { background: rgba(37,99,235,.07); color: var(--accent2); border: 1px solid rgba(37,99,235,.18); }
+
+/* ===== STAT CARDS ===== */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 16px;
+}
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px 18px;
+}
+.stat-card-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+.stat-card-value { font-family: var(--font-mono); font-size: 24px; font-weight: 500; color: var(--text); line-height: 1; margin-bottom: 4px; }
+.stat-card-sub { font-size: 12px; color: var(--text3); }
+.stat-card.highlight { border-color: rgba(37,99,235,.25); background: rgba(37,99,235,.04); }
+.stat-card.highlight .stat-card-value { color: var(--accent2); }
+
+/* ===== INSIGHT BOX ===== */
+.insight {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 16px 18px; margin-top: 16px;
+  background: #fffbeb; border: 1px solid rgba(180,83,9,.15);
+  border-radius: var(--r);
+}
+.insight-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.insight-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
+.insight-text strong { color: var(--amber); font-weight: 500; }
+
+/* ===== LEGEND ===== */
+.legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--surface2); }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ===== TOOLTIP ===== */
+.tooltip-box {
+  position: absolute; pointer-events: none;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--r); padding: 8px 12px;
+  font-size: 12px; color: var(--text); font-family: var(--font-mono);
+  white-space: nowrap; z-index: 20; display: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* ===== FORMULA ===== */
+.formula {
+  font-family: var(--font-mono); font-size: 13px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 12px 16px; margin: 12px 0;
+  color: var(--teal); display: inline-block;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg); } ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+/* ===== FOOTER ===== */
+.footer { padding: 32px 0 0; border-top: 1px solid var(--border); }
+.footer-text { font-size: 12px; color: var(--text3); line-height: 1.7; }
+.footer-text a { color: var(--accent2); text-decoration: none; }
+.footer-text a:hover { text-decoration: underline; }
+
+@media (max-width: 600px) {
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+  .hero-stats { grid-template-columns: repeat(2,1fr); }
+  .hero h1 { font-size: 1.9rem; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-eyebrow">Interactive Explainer</div>
+  <h1>The Memory Wall Is <em>Strangling</em> Your LLM</h1>
+  <p class="hero-sub">Why GPUs are faster than we think - and slower than we need. Based on the analysis by Feroz Khan.</p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">62K</div>
+      <div class="hero-stat-label">Theoretical tok/s</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">~200</div>
+      <div class="hero-stat-label">Actual tok/s</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">200×</div>
+      <div class="hero-stat-label">The gap</div>
+    </div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('mem',this)"><span class="tab-num">01</span> Memory hierarchy</button>
+  <button class="tab-btn" onclick="showTab('decode',this)"><span class="tab-num">02</span> AR decode</button>
+  <button class="tab-btn" onclick="showTab('batch',this)"><span class="tab-num">03</span> Batching & KV cache</button>
+  <button class="tab-btn" onclick="showTab('spec',this)"><span class="tab-num">04</span> Speculative decoding</button>
+  <button class="tab-btn" onclick="showTab('diff',this)"><span class="tab-num">05</span> Diffusion LLMs</button>
+  <button class="tab-btn" onclick="showTab('roof',this)"><span class="tab-num">06</span> Roofline model</button>
+</nav>
+
+<!-- ===== SECTION 1: MEMORY HIERARCHY ===== -->
+<section class="section active" id="sec-mem">
+  <div class="section-header">
+    <div class="section-label">Section 01 - The bottleneck</div>
+    <h2 class="section-title">Why HBM is the real constraint</h2>
+    <p class="section-desc">The H100 has 80 GB of HBM (high-bandwidth memory) where model weights live, and only 50 MB of on-chip SRAM. Every computation requires weights to travel from HBM to SRAM - and that bandwidth pipe (3.35 TB/s) is what limits everything.</p>
+  </div>
+
+  <div class="formula">tokens/sec ≈ HBM_bandwidth ÷ model_size = 3,350 GB/s ÷ 16 GB ≈ 200 tok/s</div>
+
+  <div class="canvas-card" style="height:340px; position:relative;">
+    <div class="canvas-label">live simulation</div>
+    <canvas id="c-mem" style="width:100%; height:340px;"></canvas>
+    <div class="tooltip-box" id="tip-mem"></div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Weight packet in HBM</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>In transit (bandwidth pipe)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>In SRAM → being computed</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--coral)"></div>Compute unit starving</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Compute unit busy</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-card-label">HBM bandwidth (H100)</div><div class="stat-card-value">3.35 TB/s</div><div class="stat-card-sub">3,350 GB/s - impressive but not enough</div></div>
+    <div class="stat-card"><div class="stat-card-label">On-chip SRAM</div><div class="stat-card-value">50 MB</div><div class="stat-card-sub">L2 cache - tiny relative to any model</div></div>
+    <div class="stat-card highlight"><div class="stat-card-label">Peak compute (H100)</div><div class="stat-card-value">1 PFLOP/s</div><div class="stat-card-sub">Mostly idle during decode</div></div>
+  </div>
+  <div class="insight">
+    <div class="insight-icon">⚡</div>
+    <div class="insight-text"><strong>The memory bandwidth gap:</strong> Compute hardware has improved at roughly Moore's Law pace. Memory bandwidth has improved much more slowly. This divergence is what makes LLM inference structurally difficult - not a software bug, not a framework inefficiency.</div>
+  </div>
+</section>
+
+<!-- ===== SECTION 2: AR DECODE ===== -->
+<section class="section" id="sec-decode">
+  <div class="section-header">
+    <div class="section-label">Section 02 - Autoregressive generation</div>
+    <h2 class="section-title">One token. One full weight transfer. Repeat.</h2>
+    <p class="section-desc">An 8B model in 16-bit precision occupies 16 GB. Generating each new token requires a complete forward pass - all 16 GB of weights must travel from HBM to on-chip SRAM, be used briefly, then discarded for the next layer.</p>
+  </div>
+
+  <div class="formula">cost per token = 16 GB weights × 1 transfer = memory-bound, always</div>
+
+  <div class="canvas-card" style="position:relative;">
+    <div class="canvas-label">step-by-step</div>
+    <canvas id="c-decode" style="width:100%; height:360px;"></canvas>
+  </div>
+  <div class="controls">
+    <button class="btn" id="btn-decode" onclick="toggleDecode()">▶ Generate tokens</button>
+    <button class="btn secondary" onclick="resetDecode()">↺ Reset</button>
+    <div style="flex:1"></div>
+    <span class="ctrl-label">generated:</span>
+    <span class="ctrl-val" id="tok-count">0 tokens</span>
+    <span class="status-pill" id="decode-status">idle</span>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card highlight"><div class="stat-card-label">Theoretical maximum</div><div class="stat-card-value">62,000</div><div class="stat-card-sub">tok/s from 1 PFLOP/s alone</div></div>
+    <div class="stat-card"><div class="stat-card-label">Memory-bound ceiling</div><div class="stat-card-value">~200</div><div class="stat-card-sub">tok/s - what you actually get</div></div>
+    <div class="stat-card"><div class="stat-card-label">GPU utilization</div><div class="stat-card-value">&lt;1%</div><div class="stat-card-sub">of peak FLOPs during decode</div></div>
+  </div>
+  <div class="insight">
+    <div class="insight-icon">⚠</div>
+    <div class="insight-text"><strong>The 200× gap is structural:</strong> For a 1,000-token response you need 1,000 complete weight transfers. With 3.35 TB/s bandwidth and 16 GB weights per transfer: 3,350 ÷ 16 ≈ 200 transfers/second. The compute units capable of 1,000 TFLOP/s sit idle most of this time, waiting for data.</div>
+  </div>
+</section>
+
+<!-- ===== SECTION 3: BATCH + KV ===== -->
+<section class="section" id="sec-batch">
+  <div class="section-header">
+    <div class="section-label">Section 03 - Batching & KV cache</div>
+    <h2 class="section-title">Batching helps - until the KV cache kills it</h2>
+    <p class="section-desc">Processing N queries simultaneously amortizes one weight transfer across N responses, pushing arithmetic intensity up. But KV cache memory scales with batch size × sequence length × model depth, consuming HBM and capping how large batches can grow.</p>
+  </div>
+
+  <div class="canvas-card">
+    <canvas id="c-batch" style="width:100%; height:380px;"></canvas>
+  </div>
+  <div class="controls">
+    <span class="ctrl-label">batch size</span>
+    <input type="range" id="batch-slider" min="1" max="64" value="1" oninput="updateBatch(this.value)">
+    <span class="ctrl-val" id="batch-val">1</span>
+    <span style="color:var(--text3); font-size:12px;">queries</span>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-card-label">Arithmetic intensity</div><div class="stat-card-value" id="arith-val">1×</div><div class="stat-card-sub">vs single-query baseline</div></div>
+    <div class="stat-card" id="kv-card"><div class="stat-card-label">KV cache used</div><div class="stat-card-value" id="kv-val">1%</div><div class="stat-card-sub">of 80 GB HBM</div></div>
+    <div class="stat-card"><div class="stat-card-label">Effective throughput</div><div class="stat-card-value" id="tput-val">1×</div><div class="stat-card-sub">relative gain vs batch=1</div></div>
+  </div>
+  <div class="insight">
+    <div class="insight-icon">📌</div>
+    <div class="insight-text"><strong>PagedAttention (vLLM)</strong> borrows ideas from OS virtual memory to manage KV cache blocks non-contiguously, reducing fragmentation and enabling larger effective batch sizes. TensorRT-LLM adds fused kernels and multi-head attention optimizations. But they all operate within the same fundamental constraint.</div>
+  </div>
+</section>
+
+<!-- ===== SECTION 4: SPECULATIVE ===== -->
+<section class="section" id="sec-spec">
+  <div class="section-header">
+    <div class="section-label">Section 04 - Speculative decoding</div>
+    <h2 class="section-title">Guess cheaply. Verify in parallel.</h2>
+    <p class="section-desc">A small draft model proposes several token candidates cheaply. The large verifier model processes the entire drafted sequence in a single forward pass - similar to prefill where multiple tokens are handled simultaneously - and accepts or rejects each using a criterion that preserves the target distribution.</p>
+  </div>
+
+  <div class="canvas-card">
+    <canvas id="c-spec" style="width:100%; height:400px;"></canvas>
+  </div>
+  <div class="controls">
+    <span class="ctrl-label">draft length</span>
+    <input type="range" id="draft-slider" min="1" max="8" value="4" oninput="updateSpec()">
+    <span class="ctrl-val" id="draft-val">4</span>
+    <span class="ctrl-label" style="margin-left:8px">acceptance rate</span>
+    <input type="range" id="acc-slider" min="10" max="95" value="75" oninput="updateSpec()">
+    <span class="ctrl-val" id="acc-val">75%</span>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-card-label">Expected accepted tokens</div><div class="stat-card-value" id="spec-acc">3.0</div><div class="stat-card-sub">per verifier forward pass</div></div>
+    <div class="stat-card highlight"><div class="stat-card-label">Effective speedup</div><div class="stat-card-value" id="spec-speedup">3.0×</div><div class="stat-card-sub">when draft is well-calibrated</div></div>
+    <div class="stat-card" id="spec-warn-card"><div class="stat-card-label">Draft calibration</div><div class="stat-card-value" id="spec-warn">✓ good</div><div class="stat-card-sub" id="spec-warn-sub">acceptance rate in range</div></div>
+  </div>
+  <div class="insight">
+    <div class="insight-icon">🎯</div>
+    <div class="insight-text"><strong>The calibration challenge:</strong> Too large a draft model → loses speed advantage. Too small → acceptance rates collapse and you do more total work than naive decoding. Acceptance rate is also sensitive to temperature, prompt distribution, and draft length. Variants: <strong>self-speculative decoding</strong> uses early exit layers of the same model; <strong>lookahead decoding</strong> uses n-gram speculation from the input.</div>
+  </div>
+</section>
+
+<!-- ===== SECTION 5: DIFFUSION ===== -->
+<section class="section" id="sec-diff">
+  <div class="section-header">
+    <div class="section-label">Section 05 - Diffusion LLMs & Block Diffusion</div>
+    <h2 class="section-title">Escape the autoregressive paradigm</h2>
+    <p class="section-desc">Diffusion LLMs start with a fully masked sequence and iteratively refine all positions simultaneously. Each denoising step updates every token - arithmetic intensity scales with context length L (opposite of AR decode). Block Diffusion hybridizes: diffusion within fixed blocks, autoregressive across blocks.</p>
+  </div>
+
+  <div class="canvas-card">
+    <canvas id="c-diff" style="width:100%; height:420px;"></canvas>
+  </div>
+  <div class="controls">
+    <button class="btn" id="btn-ar-diff" onclick="runARDiff()">▶ Run AR</button>
+    <button class="btn" id="btn-diff" onclick="runDiff()">▶ Run Diffusion</button>
+    <button class="btn" id="btn-block" onclick="runBlock()">▶ Run Block Diffusion</button>
+    <button class="btn secondary" onclick="resetDiff()">↺ Reset</button>
+    <div style="flex:1"></div>
+    <span class="status-pill" id="diff-status">idle</span>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-card-label">AR forward passes</div><div class="stat-card-value" id="ar-passes">0</div><div class="stat-card-sub">one per output token</div></div>
+    <div class="stat-card"><div class="stat-card-label">Diffusion steps</div><div class="stat-card-value" id="diff-steps-val">0</div><div class="stat-card-sub">each updates all positions</div></div>
+    <div class="stat-card highlight"><div class="stat-card-label">Arithmetic intensity</div><div class="stat-card-value" id="diff-arith">low</div><div class="stat-card-sub">AR vs diffusion regime</div></div>
+  </div>
+  <div class="insight">
+    <div class="insight-icon">🧱</div>
+    <div class="insight-text"><strong>Block diffusion (ICLR 2025 Oral)</strong> is the most promising direction: diffusion within blocks gives high arithmetic intensity; autoregressive across blocks enables early stopping at <code>&lt;EOS&gt;</code> and KV caching. Most AR optimizations (speculative decoding, paged attention, continuous batching) can be grafted onto block diffusion without major rearchitecting.</div>
+  </div>
+</section>
+
+<!-- ===== SECTION 6: ROOFLINE ===== -->
+<section class="section" id="sec-roof">
+  <div class="section-header">
+    <div class="section-label">Section 06 - The roofline model</div>
+    <h2 class="section-title">Where does each workload fall?</h2>
+    <p class="section-desc">The roofline model (Williams et al., 2009) plots achieved performance against arithmetic intensity (FLOPs/byte). Below the ridge point: memory-bound - performance scales with bandwidth. Above: compute-bound - limited by peak FLOP/s. AR decode is always far left. Prefill and diffusion cross into compute-bound territory.</p>
+  </div>
+
+  <div class="canvas-card" style="position:relative;">
+    <div class="canvas-label">hover to explore</div>
+    <canvas id="c-roof" style="width:100%; height:420px;"></canvas>
+    <div class="tooltip-box" id="tip-roof"></div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--coral)"></div>AR decode - memory-bound</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Speculative decode - higher intensity</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>Prefill / encode - compute-bound</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div>Diffusion LLM - compute-bound</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-card-label">Ridge point (H100)</div><div class="stat-card-value">~300</div><div class="stat-card-sub">FLOPs/byte where regimes meet</div></div>
+    <div class="stat-card"><div class="stat-card-label">AR decode intensity</div><div class="stat-card-value">&lt;1</div><div class="stat-card-sub">FLOP/byte - far memory-bound</div></div>
+    <div class="stat-card highlight"><div class="stat-card-label">Prefill intensity</div><div class="stat-card-value">100–1K</div><div class="stat-card-sub">FLOP/byte - clearly compute-bound</div></div>
+  </div>
+  <div class="insight">
+    <div class="insight-icon">💡</div>
+    <div class="insight-text"><strong>The economic argument:</strong> Architectures that shift workloads toward the compute-bound regime directly reduce cost per token by making better use of silicon that's already paid for. The 200× gap means you're paying for peak FLOP/s hardware but productively using only a small fraction. Solving this translates directly into cheaper, faster AI.</div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p class="footer-text">Based on <a href="https://medium.com/data-science-collective/the-memory-wall-is-strangling-your-llm-why-gpus-are-faster-than-you-think-and-slower-than-you-need-cfaf28226" target="_blank">"The Memory Wall Is Strangling Your LLM"</a> by Feroz Khan, Data Science Collective, May 2026. Interactive explainer built for embedding via GitHub Pages.</p>
+</footer>
+
+</div><!-- end .page -->
+
+<script>
+const C = {
+  bg: '#f9f8f6', surface: '#ffffff', surface2: '#f2f1ef', surface3: '#e8e6e1',
+  border: 'rgba(0,0,0,0.08)', border2: 'rgba(0,0,0,0.15)',
+  text: '#1a1917', text2: '#5a5750', text3: '#9a9790',
+  accent: '#2563eb', accent2: '#1d4ed8',
+  teal: '#0d9488', amber: '#b45309', coral: '#dc2626', blue: '#2563eb', green: '#16a34a',
+};
+
+const DPR = window.devicePixelRatio || 1;
+
+function setupCanvas(id, h) {
+  const el = document.getElementById(id);
+  const parent = el.parentElement;
+  const W = parent.clientWidth;
+  el.width = W * DPR; el.height = h * DPR;
+  el.style.width = W + 'px'; el.style.height = h + 'px';
+  const ctx = el.getContext('2d'); ctx.scale(DPR, DPR);
+  return [ctx, W, h];
+}
+
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y); ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r);
+  ctx.closePath();
+}
+
+function ease(t) { return t<.5?2*t*t:-1+(4-2*t)*t; }
+
+function label(ctx, text, x, y, color, size=11, align='left') {
+  ctx.fillStyle = color; ctx.font = size+'px "DM Mono", monospace'; ctx.textAlign = align;
+  ctx.fillText(text, x, y);
+}
+
+function showTab(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  btn.classList.add('active');
+  setTimeout(() => initSection(id), 60);
+}
+
+function initSection(id) {
+  if (id==='mem') initMem();
+  else if (id==='decode') { resetDecode(); drawDecodeIdle(); }
+  else if (id==='batch') { drawBatch(); }
+  else if (id==='spec') { updateSpec(); }
+  else if (id==='diff') { resetDiff(); }
+  else if (id==='roof') { drawRoofline(); setupRooflineHover(); }
+}
+
+// ==============================
+// SECTION 1 - MEMORY HIERARCHY
+// ==============================
+let memRAF, memPackets = [], memT = 0;
+
+function initMem() {
+  if (memRAF) cancelAnimationFrame(memRAF);
+  const [ctx, W, H] = setupCanvas('c-mem', 340);
+  memPackets = [];
+  for (let i=0; i<8; i++) {
+    memPackets.push({
+      x: 50 + Math.random()*150,
+      y: 70 + Math.random()*200,
+      phase: 'hbm', t: Math.random()*100,
+      speed: 0.4+Math.random()*0.4,
+      cuIdx: i % 4,
+    });
+  }
+  animMem(ctx, W, H);
+}
+
+function animMem(ctx, W, H) {
+  const HBM_X=30, HBM_W=200, HBM_Y=30, HBM_H=280;
+  const SRAM_X=W*0.46, SRAM_W=130, SRAM_Y=90, SRAM_H=160;
+  const COMP_X=W*0.78, COMP_Y=50;
+  const PIPE_Y=170;
+  let busyMask = 0;
+
+  function frame() {
+    ctx.clearRect(0,0,W,H);
+    busyMask = 0;
+
+    // HBM block
+    ctx.fillStyle = C.surface2;
+    rr(ctx, HBM_X, HBM_Y, HBM_W, HBM_H, 12); ctx.fill();
+    ctx.strokeStyle='rgba(37,99,235,0.3)'; ctx.lineWidth=1;
+    rr(ctx, HBM_X, HBM_Y, HBM_W, HBM_H, 12); ctx.stroke();
+    label(ctx, 'HBM', HBM_X+HBM_W/2, HBM_Y+26, C.accent2, 13, 'center');
+    label(ctx, '80 GB · 3.35 TB/s', HBM_X+HBM_W/2, HBM_Y+44, C.text3, 10, 'center');
+    // stacked weight slabs in HBM
+    for (let i=0; i<10; i++) {
+      const sy = HBM_Y+60+i*19;
+      ctx.fillStyle = i===3 ? 'rgba(29,78,216,0.25)' : 'rgba(37,99,235,0.1)';
+      ctx.strokeStyle = i===3 ? 'rgba(29,78,216,0.5)' : 'rgba(37,99,235,0.2)';
+      ctx.lineWidth = 0.5;
+      rr(ctx, HBM_X+14, sy, HBM_W-28, 13, 3); ctx.fill(); ctx.stroke();
+      label(ctx, 'layer '+(i+1), HBM_X+HBM_W/2, sy+9.5, C.text3, 9, 'center');
+    }
+
+    // Bandwidth pipe
+    ctx.strokeStyle='rgba(180,83,9,0.15)'; ctx.lineWidth=18;
+    ctx.beginPath(); ctx.moveTo(HBM_X+HBM_W, PIPE_Y); ctx.lineTo(SRAM_X, PIPE_Y); ctx.stroke();
+    ctx.strokeStyle='rgba(180,83,9,0.4)'; ctx.lineWidth=1; ctx.setLineDash([8,6]);
+    ctx.beginPath(); ctx.moveTo(HBM_X+HBM_W+4, PIPE_Y-1); ctx.lineTo(SRAM_X-4, PIPE_Y-1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(HBM_X+HBM_W+4, PIPE_Y+1); ctx.lineTo(SRAM_X-4, PIPE_Y+1); ctx.stroke();
+    ctx.setLineDash([]);
+    label(ctx, 'memory bandwidth', (HBM_X+HBM_W+SRAM_X)/2, PIPE_Y-14, C.amber, 10, 'center');
+    label(ctx, '← bottleneck', (HBM_X+HBM_W+SRAM_X)/2, PIPE_Y+24, 'rgba(220,38,38,0.7)', 9, 'center');
+
+    // SRAM block
+    ctx.fillStyle=C.surface2;
+    rr(ctx, SRAM_X, SRAM_Y, SRAM_W, SRAM_H, 10); ctx.fill();
+    ctx.strokeStyle='rgba(13,148,136,0.3)'; ctx.lineWidth=1;
+    rr(ctx, SRAM_X, SRAM_Y, SRAM_W, SRAM_H, 10); ctx.stroke();
+    label(ctx, 'SRAM', SRAM_X+SRAM_W/2, SRAM_Y+22, C.teal, 13, 'center');
+    label(ctx, '50 MB on-chip', SRAM_X+SRAM_W/2, SRAM_Y+38, C.text3, 10, 'center');
+
+    // Compute units
+    label(ctx, 'Tensor cores', COMP_X+60, COMP_Y-8, C.text2, 11, 'center');
+    const cuColors = ['rgba(37,99,235,.15)', 'rgba(37,99,235,.15)', 'rgba(37,99,235,.15)', 'rgba(37,99,235,.15)'];
+    for (let i=0; i<4; i++) {
+      const busy = !!(busyMask & (1<<i));
+      const cy = COMP_Y + i*60;
+      ctx.fillStyle = busy ? 'rgba(37,99,235,0.15)' : 'rgba(220,38,38,0.08)';
+      ctx.strokeStyle = busy ? 'rgba(37,99,235,0.4)' : 'rgba(220,38,38,0.2)';
+      ctx.lineWidth=0.5;
+      rr(ctx, COMP_X+10, cy, 100, 46, 7); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = busy ? C.blue : C.coral;
+      ctx.font = '500 11px "DM Mono"'; ctx.textAlign='center';
+      ctx.fillText(busy ? '⚡ running' : '· waiting', COMP_X+60, cy+28);
+    }
+
+    // SRAM→Compute pipe
+    ctx.strokeStyle=C.border2; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(SRAM_X+SRAM_W, PIPE_Y); ctx.lineTo(COMP_X+10, PIPE_Y); ctx.stroke();
+
+    // Update packets
+    memPackets.forEach((p,i) => {
+      p.t++;
+      if (p.phase==='hbm') {
+        // draw as purple cube
+        ctx.fillStyle='rgba(37,99,235,0.7)';
+        rr(ctx, p.x-7, p.y-7, 14, 14, 3); ctx.fill();
+        if (p.t>90+i*8) { p.phase='transit'; p.tp=0; p.sx=p.x; p.sy=p.y; p.t=0; }
+      } else if (p.phase==='transit') {
+        p.tp=Math.min(1, p.t/50);
+        const ex=ease(p.tp);
+        const cx=p.sx+(SRAM_X+SRAM_W/2-p.sx)*ex;
+        const cy=p.sy+(PIPE_Y-p.sy)*ex;
+        ctx.fillStyle=C.amber;
+        ctx.shadowColor=C.amber; ctx.shadowBlur=4;
+        ctx.beginPath(); ctx.arc(cx,cy,6,0,Math.PI*2); ctx.fill();
+        ctx.shadowBlur=0;
+        if (p.tp>=1) { p.phase='sram'; p.t=0; }
+      } else if (p.phase==='sram') {
+        const sx=SRAM_X+15+(i%3)*32, sy=SRAM_Y+55+Math.floor(i/3)*28;
+        ctx.fillStyle=C.teal;
+        rr(ctx, sx, sy, 24, 18, 3); ctx.fill();
+        if (p.t>25) { p.phase='compute'; p.t=0; busyMask |= (1<<p.cuIdx); }
+      } else if (p.phase==='compute') {
+        busyMask |= (1<<p.cuIdx);
+        if (p.t>20) { p.phase='hbm'; p.x=50+Math.random()*150; p.y=70+Math.random()*200; p.t=Math.random()*60; }
+      }
+    });
+
+    // recompute busy for render order (draw compute after packets for correct overlay)
+    // (busyMask already set above)
+
+    memRAF = requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+// ==============================
+// SECTION 2 - DECODE
+// ==============================
+let decRunning=false, decTokens=[], decCount=0, decRAF, decStart=null, decProgress=0;
+const DEC_TOTAL=20;
+
+function toggleDecode() {
+  if (decCount>=DEC_TOTAL) return;
+  decRunning=!decRunning;
+  document.getElementById('btn-decode').textContent=decRunning?'⏸ Pause':'▶ Generate tokens';
+  document.getElementById('decode-status').textContent=decRunning?'generating':'paused';
+  document.getElementById('decode-status').className='status-pill'+(decRunning?' running':'');
+  if (decRunning) { if (!decStart) decStart=Date.now(); animDecode(); }
+}
+
+function resetDecode() {
+  decRunning=false; decTokens=[]; decCount=0; decStart=null; decProgress=0;
+  document.getElementById('btn-decode').textContent='▶ Generate tokens';
+  document.getElementById('tok-count').textContent='0 tokens';
+  document.getElementById('decode-status').textContent='idle';
+  document.getElementById('decode-status').className='status-pill';
+  cancelAnimationFrame(decRAF);
+  drawDecodeIdle();
+}
+
+function drawDecodeIdle() {
+  const [ctx, W, H] = setupCanvas('c-decode', 360);
+  drawDecodeFrame(ctx, W, H, 0);
+}
+
+function animDecode() {
+  if (!decRunning || decCount>=DEC_TOTAL) return;
+  const [ctx, W, H] = setupCanvas('c-decode', 360);
+  decProgress += 0.016;
+  if (decProgress>=1) {
+    decProgress=0; decCount++;
+    decTokens.push(decCount);
+    document.getElementById('tok-count').textContent=decCount+' / '+DEC_TOTAL+' tokens';
+    if (decCount>=DEC_TOTAL) {
+      decRunning=false;
+      document.getElementById('btn-decode').textContent='✓ Complete';
+      document.getElementById('decode-status').textContent='done';
+      document.getElementById('decode-status').className='status-pill done';
+    }
+  }
+  drawDecodeFrame(ctx, W, H, decProgress);
+  if (decRunning) decRAF = requestAnimationFrame(animDecode);
+}
+
+function drawDecodeFrame(ctx, W, H, progress) {
+  ctx.clearRect(0,0,W,H);
+  const HBM_X=16, HBM_W=180;
+  const SRAM_X=W*0.45, SRAM_W=100;
+  const COMP_X=W*0.73, COMP_W=W-COMP_X-16;
+  const PIPE_Y=130;
+
+  // --- Weight layers (HBM) ---
+  label(ctx,'HBM - model weights (16 GB)', HBM_X, 22, C.text2, 11);
+  for (let i=0; i<12; i++) {
+    const active = Math.floor(progress*12)===i;
+    const sy = 32+i*19;
+    ctx.fillStyle = active ? 'rgba(29,78,216,0.3)' : 'rgba(37,99,235,0.08)';
+    ctx.strokeStyle = active ? C.accent2 : 'rgba(37,99,235,0.2)';
+    ctx.lineWidth = active ? 1 : 0.5;
+    rr(ctx, HBM_X+4, sy, HBM_W-8, 15, 3); ctx.fill(); ctx.stroke();
+    if (active) {
+      label(ctx, 'layer '+(i+1)+' - loading...', HBM_X+HBM_W/2, sy+10, C.accent2, 9, 'center');
+    } else {
+      label(ctx, 'layer '+(i+1), HBM_X+HBM_W/2, sy+10, C.text3, 9, 'center');
+    }
+  }
+
+  // --- Bandwidth pipe ---
+  const pw=SRAM_X-(HBM_X+HBM_W);
+  ctx.fillStyle='rgba(180,83,9,0.06)';
+  rr(ctx, HBM_X+HBM_W, PIPE_Y-16, pw, 32, 4); ctx.fill();
+  ctx.strokeStyle='rgba(180,83,9,0.25)'; ctx.lineWidth=0.5;
+  rr(ctx, HBM_X+HBM_W, PIPE_Y-16, pw, 32, 4); ctx.stroke();
+
+  // moving packet
+  if (progress>0.05 && progress<0.75) {
+    const t=(progress-0.05)/0.7;
+    const px=HBM_X+HBM_W+pw*ease(t);
+    ctx.fillStyle=C.amber;
+    ctx.shadowColor=C.amber; ctx.shadowBlur=6;
+    ctx.beginPath(); ctx.arc(px, PIPE_Y, 7, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    label(ctx,'16 GB weight transfer', HBM_X+HBM_W+pw/2, PIPE_Y-22, C.amber, 9, 'center');
+  }
+
+  // --- SRAM ---
+  ctx.fillStyle=C.surface2;
+  rr(ctx, SRAM_X, 70, SRAM_W, 120, 8); ctx.fill();
+  ctx.strokeStyle='rgba(13,148,136,0.3)'; ctx.lineWidth=1;
+  rr(ctx, SRAM_X, 70, SRAM_W, 120, 8); ctx.stroke();
+  label(ctx,'SRAM', SRAM_X+SRAM_W/2, 94, C.teal, 12, 'center');
+  label(ctx,'50 MB', SRAM_X+SRAM_W/2, 112, C.text3, 10, 'center');
+  if (progress>0.7&&progress<1) {
+    ctx.fillStyle='rgba(13,148,136,0.15)';
+    rr(ctx, SRAM_X+8, 120, SRAM_W-16, 54, 4); ctx.fill();
+    label(ctx,'computing...', SRAM_X+SRAM_W/2, 152, C.teal, 9, 'center');
+  }
+
+  // --- Compute units ---
+  const busy=progress>0.72;
+  ctx.fillStyle= busy?'rgba(37,99,235,0.1)':'rgba(220,38,38,0.06)';
+  ctx.strokeStyle= busy?'rgba(37,99,235,0.35)':'rgba(220,38,38,0.2)';
+  ctx.lineWidth=1;
+  rr(ctx, COMP_X, 60, COMP_W, 140, 10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle= busy?C.blue:C.coral;
+  ctx.font='500 13px "DM Mono"'; ctx.textAlign='center';
+  ctx.fillText(busy?'⚡ compute':' · waiting', COMP_X+COMP_W/2, 138);
+  label(ctx,'1000 TFLOP/s', COMP_X+COMP_W/2, 80, C.text3, 10, 'center');
+  label(ctx,'H100 tensor cores', COMP_X+COMP_W/2, 94, C.text3, 9, 'center');
+
+  // single output token appearing
+  label(ctx,'output sequence:', 16, 260, C.text3, 10);
+  const cols=10;
+  const tw=Math.min(52, (W-32)/cols-3);
+  decTokens.slice(-20).forEach((t,i) => {
+    const tx=16+i*(tw+3), ty=272;
+    ctx.fillStyle='rgba(13,148,136,0.15)';
+    ctx.strokeStyle='rgba(13,148,136,0.35)'; ctx.lineWidth=0.5;
+    rr(ctx, tx, ty, tw, 22, 4); ctx.fill(); ctx.stroke();
+    label(ctx,'t'+t, tx+tw/2, ty+14.5, C.teal, 9, 'center');
+  });
+  // next token appearing
+  if (progress>0.82 && decCount<DEC_TOTAL) {
+    const a=(progress-0.82)/0.18;
+    const ni=decTokens.length, tx2=16+ni*(tw+3), ty2=272;
+    ctx.globalAlpha=a;
+    ctx.fillStyle='rgba(29,78,216,0.2)';
+    ctx.strokeStyle=C.accent2; ctx.lineWidth=0.5;
+    rr(ctx, tx2, ty2, tw, 22, 4); ctx.fill(); ctx.stroke();
+    label(ctx,'t'+(ni+1), tx2+tw/2, ty2+14.5, C.accent2, 9, 'center');
+    ctx.globalAlpha=1;
+  }
+
+  // cost label per token
+  label(ctx,'Each token = full 16 GB weight sweep  →  ~200 tok/s ceiling', W/2, 336, C.text3, 10, 'center');
+}
+
+// ==============================
+// SECTION 3 - BATCHING
+// ==============================
+let batchN=1;
+function updateBatch(v) {
+  batchN=parseInt(v);
+  document.getElementById('batch-val').textContent=v;
+  const arith=batchN;
+  const kvPct=Math.min(92, Math.round(batchN*1.38));
+  // throughput gain: increases up to ~batch 32, then KV pressure cuts it
+  const effective = batchN<=32 ? batchN : Math.round(32*(1-(batchN-32)/64*0.4));
+  document.getElementById('arith-val').textContent=arith+'×';
+  document.getElementById('kv-val').textContent=kvPct+'%';
+  document.getElementById('tput-val').textContent=Math.max(1,effective)+'×';
+  const kc=document.getElementById('kv-card');
+  kc.className='stat-card'+(kvPct>60?' highlight':'');
+  drawBatch();
+}
+
+function drawBatch() {
+  const [ctx, W, H]=setupCanvas('c-batch',380);
+  ctx.clearRect(0,0,W,H);
+  const BAR_X=16, BAR_Y=40, BAR_H=28, BAR_W=W-32;
+  const wPct=0.19, kvPct=Math.min(0.78, batchN*0.0138);
+  const freePct=1-wPct-kvPct;
+
+  // HBM bar title
+  label(ctx,'HBM allocation (80 GB total)', BAR_X, BAR_Y-10, C.text2, 11);
+
+  // Weights segment
+  ctx.fillStyle='rgba(37,99,235,0.15)'; ctx.strokeStyle='rgba(37,99,235,0.4)'; ctx.lineWidth=0.5;
+  rr(ctx, BAR_X, BAR_Y, BAR_W*wPct, BAR_H, 4); ctx.fill(); ctx.stroke();
+  label(ctx,'Weights 16 GB', BAR_X+BAR_W*wPct/2, BAR_Y+17, C.accent2, 9, 'center');
+
+  // KV cache segment
+  const kvX=BAR_X+BAR_W*wPct+2;
+  ctx.fillStyle='rgba(180,83,9,0.2)'; ctx.strokeStyle='rgba(180,83,9,0.4)'; ctx.lineWidth=0.5;
+  rr(ctx, kvX, BAR_Y, BAR_W*kvPct, BAR_H, 4); ctx.fill(); ctx.stroke();
+  if (kvPct>0.06) label(ctx,'KV cache', kvX+BAR_W*kvPct/2, BAR_Y+17, C.amber, 9, 'center');
+
+  // Free segment
+  if (freePct>0.02) {
+    const fx=kvX+BAR_W*kvPct+2;
+    ctx.fillStyle='rgba(0,0,0,0.03)'; ctx.strokeStyle=C.border; ctx.lineWidth=0.5;
+    rr(ctx, fx, BAR_Y, BAR_W*freePct-2, BAR_H, 4); ctx.fill(); ctx.stroke();
+    if (freePct>0.08) label(ctx,'free', fx+(BAR_W*freePct-2)/2, BAR_Y+17, C.text3, 9, 'center');
+  }
+
+  // Arithmetic intensity chart
+  const CHART_Y=92, CHART_H=80, CHART_W=W-32;
+  label(ctx,'Arithmetic intensity vs batch size', BAR_X, CHART_Y-8, C.text2, 11);
+  // background
+  ctx.fillStyle='rgba(0,0,0,0.02)'; rr(ctx,BAR_X,CHART_Y,CHART_W,CHART_H,6); ctx.fill();
+  // line
+  ctx.strokeStyle=C.teal; ctx.lineWidth=2;
+  ctx.beginPath();
+  for (let b=1; b<=64; b++) {
+    const x=BAR_X+CHART_W*(b-1)/63;
+    const y=CHART_Y+CHART_H - Math.min(1,b/32)*CHART_H*0.85;
+    if (b===1) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  // current batch marker
+  const markerX=BAR_X+CHART_W*(batchN-1)/63;
+  const markerY=CHART_Y+CHART_H-Math.min(1,batchN/32)*CHART_H*0.85;
+  ctx.fillStyle=C.teal; ctx.beginPath(); ctx.arc(markerX,markerY,6,0,Math.PI*2); ctx.fill();
+  label(ctx,'batch '+batchN, markerX+10, markerY+4, C.teal, 10);
+  label(ctx,'1', BAR_X+4, CHART_Y+CHART_H-4, C.text3, 9);
+  label(ctx,'64', BAR_X+CHART_W-16, CHART_Y+CHART_H-4, C.text3, 9);
+
+  // KV cache pressure chart
+  const KV_Y=200, KV_H=80;
+  label(ctx,'KV cache pressure vs batch size', BAR_X, KV_Y-8, C.text2, 11);
+  ctx.fillStyle='rgba(0,0,0,0.02)'; rr(ctx,BAR_X,KV_Y,CHART_W,KV_H,6); ctx.fill();
+  ctx.strokeStyle=C.amber; ctx.lineWidth=2;
+  ctx.beginPath();
+  for (let b=1; b<=64; b++) {
+    const x=BAR_X+CHART_W*(b-1)/63;
+    const kv=Math.min(1,b*0.0138/0.78);
+    const y=KV_Y+KV_H-kv*KV_H*0.95;
+    if (b===1) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  const kvY2=KV_Y+KV_H-Math.min(1,batchN*0.0138/0.78)*KV_H*0.95;
+  ctx.fillStyle=C.amber; ctx.beginPath(); ctx.arc(markerX,kvY2,6,0,Math.PI*2); ctx.fill();
+  label(ctx,'batch '+batchN, markerX+10, kvY2+4, C.amber, 10);
+
+  // Query rows
+  label(ctx,'Batch queries sharing one weight stream:', BAR_X, 306, C.text2, 11);
+  const rows=Math.min(batchN,8);
+  const rh=Math.min(28, (H-318)/rows-2);
+  for (let i=0; i<rows; i++) {
+    const ry=316+i*(rh+2);
+    ctx.fillStyle='rgba(13,148,136,0.07)'; ctx.strokeStyle='rgba(13,148,136,0.2)'; ctx.lineWidth=0.5;
+    rr(ctx, BAR_X, ry, W-32, rh, 3); ctx.fill(); ctx.stroke();
+    label(ctx,'Query '+(i+1)+' → generating output tokens in parallel', BAR_X+10, ry+rh/2+4, C.teal, 10);
+  }
+  if (batchN>8) label(ctx,'+ '+(batchN-8)+' more queries...', W/2, 316+8*(rh+2)+12, C.text3, 10, 'center');
+}
+
+// ==============================
+// SECTION 4 - SPECULATIVE
+// ==============================
+function updateSpec() {
+  const d=parseInt(document.getElementById('draft-slider').value);
+  const a=parseInt(document.getElementById('acc-slider').value)/100;
+  document.getElementById('draft-val').textContent=d;
+  document.getElementById('acc-val').textContent=Math.round(a*100)+'%';
+
+  // expected tokens accepted: geometric series
+  let expected=0;
+  for (let i=0; i<d; i++) expected += Math.pow(a, i);
+  expected=Math.min(d, expected);
+  const speedup=expected;
+  document.getElementById('spec-acc').textContent=expected.toFixed(1);
+  document.getElementById('spec-speedup').textContent=speedup.toFixed(1)+'×';
+
+  const warnCard=document.getElementById('spec-warn-card');
+  const warnVal=document.getElementById('spec-warn');
+  const warnSub=document.getElementById('spec-warn-sub');
+  if (a<0.5) { warnCard.className='stat-card'; warnVal.style.color=C.coral; warnVal.textContent='⚠ poor'; warnSub.textContent='slower than naive decode'; }
+  else if (a<0.7) { warnCard.className='stat-card'; warnVal.style.color=C.amber; warnVal.textContent='~ moderate'; warnSub.textContent='marginal gains'; }
+  else { warnCard.className='stat-card highlight'; warnVal.style.color=C.teal; warnVal.textContent='✓ good'; warnSub.textContent='meaningful speedup'; }
+
+  drawSpec(d, a, expected);
+}
+
+function drawSpec(draftLen, accRate, expected) {
+  const [ctx, W, H]=setupCanvas('c-spec', 400);
+  ctx.clearRect(0,0,W,H);
+
+  const DRAFT_Y=60, VER_Y=220;
+  const TW=Math.min(52, (W-200)/draftLen-4);
+  const TOK_START=180;
+  const accepted=Math.round(expected);
+
+  // Draft model box
+  ctx.fillStyle=C.surface2; ctx.strokeStyle='rgba(180,83,9,0.35)'; ctx.lineWidth=1;
+  rr(ctx,16,DRAFT_Y-20,140,44,8); ctx.fill(); ctx.stroke();
+  label(ctx,'Draft LLM', 86, DRAFT_Y-4, C.amber, 12, 'center');
+  label(ctx,'small, fast', 86, DRAFT_Y+12, C.text3, 10, 'center');
+
+  // Arrows from draft to tokens
+  for (let i=0; i<draftLen; i++) {
+    const tx=TOK_START+i*(TW+4);
+    ctx.strokeStyle='rgba(180,83,9,0.2)'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(156, DRAFT_Y); ctx.lineTo(tx+TW/2, DRAFT_Y+8); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Draft proposed tokens
+  label(ctx,'Proposes '+draftLen+' candidate tokens:', TOK_START, DRAFT_Y-28, C.text3, 10);
+  for (let i=0; i<draftLen; i++) {
+    const tx=TOK_START+i*(TW+4);
+    ctx.fillStyle='rgba(180,83,9,0.15)'; ctx.strokeStyle='rgba(180,83,9,0.4)'; ctx.lineWidth=0.5;
+    rr(ctx, tx, DRAFT_Y-14, TW, 32, 5); ctx.fill(); ctx.stroke();
+    label(ctx, 'draft', tx+TW/2, DRAFT_Y+2, C.amber, 9, 'center');
+    label(ctx, 't'+(i+1), tx+TW/2, DRAFT_Y+14, C.text2, 10, 'center');
+  }
+
+  // Arrow to verifier (single pass)
+  const midX=TOK_START+(draftLen*(TW+4))/2;
+  ctx.strokeStyle='rgba(29,78,216,0.3)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(midX, DRAFT_Y+20); ctx.lineTo(midX, VER_Y-28); ctx.stroke();
+  // arrowhead
+  ctx.fillStyle='rgba(29,78,216,0.4)';
+  ctx.beginPath(); ctx.moveTo(midX,VER_Y-28); ctx.lineTo(midX-5,VER_Y-38); ctx.lineTo(midX+5,VER_Y-38); ctx.closePath(); ctx.fill();
+  label(ctx,'1 forward pass (like prefill)', midX+10, VER_Y-44, C.accent, 10);
+
+  // Verifier box
+  ctx.fillStyle=C.surface2; ctx.strokeStyle='rgba(37,99,235,0.5)'; ctx.lineWidth=1.5;
+  rr(ctx,16,VER_Y-22,140,50,8); ctx.fill(); ctx.stroke();
+  label(ctx,'Verifier LLM', 86, VER_Y-6, C.accent2, 12, 'center');
+  label(ctx,'large model', 86, VER_Y+10, C.text3, 10, 'center');
+
+  // Accepted/rejected tokens
+  label(ctx,'Accepts '+accepted+'/'+draftLen+' tokens ('+Math.round(accRate*100)+'% rate):', TOK_START, VER_Y-28, C.text3, 10);
+  for (let i=0; i<draftLen; i++) {
+    const tx=TOK_START+i*(TW+4);
+    const acc=i<accepted;
+    ctx.fillStyle= acc?'rgba(13,148,136,0.15)':'rgba(220,38,38,0.08)';
+    ctx.strokeStyle= acc?'rgba(13,148,136,0.45)':'rgba(220,38,38,0.25)';
+    ctx.lineWidth=acc?1:0.5;
+    rr(ctx, tx, VER_Y-14, TW, 36, 5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=acc?C.teal:C.coral;
+    ctx.font='500 12px "DM Mono"'; ctx.textAlign='center';
+    ctx.fillText(acc?'✓':'✗', tx+TW/2, VER_Y+5);
+    label(ctx,'t'+(i+1), tx+TW/2, VER_Y+18, acc?C.teal:C.text3, 9, 'center');
+  }
+
+  // Final output row
+  label(ctx,'Tokens kept this step:', TOK_START, VER_Y+44, C.text3, 10);
+  for (let i=0; i<accepted; i++) {
+    const tx=TOK_START+i*(TW+4);
+    ctx.fillStyle='rgba(13,148,136,0.25)'; ctx.strokeStyle=C.teal; ctx.lineWidth=0.5;
+    rr(ctx, tx, VER_Y+52, TW, 26, 4); ctx.fill(); ctx.stroke();
+    label(ctx,'t'+(i+1), tx+TW/2, VER_Y+68, C.teal, 10, 'center');
+  }
+
+  // Summary annotation
+  const sX=TOK_START+draftLen*(TW+4)+16;
+  if (sX+120<W) {
+    ctx.fillStyle='rgba(37,99,235,0.08)'; ctx.strokeStyle='rgba(37,99,235,0.2)'; ctx.lineWidth=0.5;
+    rr(ctx, sX, VER_Y-14, W-sX-16, 80, 6); ctx.fill(); ctx.stroke();
+    label(ctx,'speedup:', sX+8, VER_Y+8, C.text3, 9);
+    ctx.fillStyle=C.accent2; ctx.font='500 20px "DM Mono"'; ctx.textAlign='left';
+    ctx.fillText(expected.toFixed(1)+'×', sX+8, VER_Y+32);
+    label(ctx,'vs naive decode', sX+8, VER_Y+50, C.text3, 9);
+  }
+
+  // Comparison: naive
+  label(ctx,'Naive (no spec): 1 token per heavy forward pass', 16, 360, C.coral, 10);
+  ctx.fillStyle=C.coral; rr(ctx,16,366,TW,22,4); ctx.fill();
+  label(ctx,'t'+( decCount+1 ), 16+TW/2, 366+14, '#fff', 9, 'center');
+  ctx.fillStyle=C.text3; ctx.font='11px "DM Mono"'; ctx.textAlign='left';
+  ctx.fillText('← 1 forward pass', 16+TW+8, 380);
+
+  label(ctx,'Speculative: '+accepted+' tokens per heavy forward pass', 16, 392+2, C.teal, 10);
+  for (let i=0;i<accepted;i++) {
+    ctx.fillStyle=C.teal; rr(ctx,16+i*(TW+2),398,TW,22,4); ctx.fill();
+    label(ctx,'t'+(i+1), 16+i*(TW+2)+TW/2, 398+14, '#fff', 9, 'center');
+  }
+  ctx.fillStyle=C.text3; ctx.font='11px "DM Mono"'; ctx.textAlign='left';
+  ctx.fillText('← 1 forward pass', 16+accepted*(TW+2)+8, 412);
+}
+
+// ==============================
+// SECTION 5 - DIFFUSION
+// ==============================
+let diffMode=null, arT=0, diffT=0, blockT=0, diffRAF;
+const DIFF_TOKENS=20, DIFF_STEPS=5, BLOCK_SIZE=5;
+let arStates=[], diffStates=[], blockStates=[];
+
+function initDiffStates() {
+  arStates=Array(DIFF_TOKENS).fill('empty');
+  diffStates=Array(DIFF_TOKENS).fill(0);
+  blockStates=Array(DIFF_TOKENS).fill(0);
+  arT=0; diffT=0; blockT=0;
+}
+
+function resetDiff() {
+  cancelAnimationFrame(diffRAF); diffMode=null;
+  initDiffStates();
+  document.getElementById('ar-passes').textContent='0';
+  document.getElementById('diff-steps-val').textContent='0';
+  document.getElementById('diff-arith').textContent='-';
+  document.getElementById('diff-status').textContent='idle';
+  document.getElementById('diff-status').className='status-pill';
+  drawDiff();
+}
+
+function runARDiff() {
+  if (diffMode==='ar') return;
+  cancelAnimationFrame(diffRAF); diffMode='ar'; arT=0;
+  arStates=Array(DIFF_TOKENS).fill('empty');
+  document.getElementById('diff-arith').textContent='memory-bound';
+  document.getElementById('diff-status').textContent='AR: generating left-to-right...';
+  document.getElementById('diff-status').className='status-pill running';
+  stepAR();
+}
+
+function stepAR() {
+  if (arT>=DIFF_TOKENS) {
+    document.getElementById('diff-status').textContent='AR done: '+DIFF_TOKENS+' passes';
+    document.getElementById('diff-status').className='status-pill done';
+    return;
+  }
+  arStates[arT]='done'; arT++;
+  document.getElementById('ar-passes').textContent=arT;
+  drawDiff();
+  diffRAF=setTimeout(stepAR, 180);
+}
+
+function runDiff() {
+  if (diffMode==='diff') return;
+  cancelAnimationFrame(diffRAF); diffMode='diff'; diffT=0;
+  diffStates=Array(DIFF_TOKENS).fill(0);
+  document.getElementById('diff-arith').textContent='compute-bound';
+  document.getElementById('diff-status').textContent='Diffusion: refining all tokens...';
+  document.getElementById('diff-status').className='status-pill running';
+  stepDiff();
+}
+
+function stepDiff() {
+  if (diffT>=DIFF_STEPS) {
+    document.getElementById('diff-status').textContent='Diffusion done: '+DIFF_STEPS+' steps (all '+DIFF_TOKENS+' tokens)';
+    document.getElementById('diff-status').className='status-pill done';
+    return;
+  }
+  diffT++;
+  const clarity=diffT/DIFF_STEPS;
+  diffStates=diffStates.map(()=>clarity);
+  document.getElementById('diff-steps-val').textContent=diffT;
+  drawDiff();
+  diffRAF=setTimeout(stepDiff, 600);
+}
+
+function runBlock() {
+  if (diffMode==='block') return;
+  cancelAnimationFrame(diffRAF); diffMode='block'; blockT=0;
+  blockStates=Array(DIFF_TOKENS).fill(0);
+  document.getElementById('diff-arith').textContent='hybrid';
+  document.getElementById('diff-status').textContent='Block diffusion: AR across blocks, diffusion within...';
+  document.getElementById('diff-status').className='status-pill running';
+  stepBlock(0,0);
+}
+
+function stepBlock(blockIdx, step) {
+  const start=blockIdx*BLOCK_SIZE, end=Math.min(start+BLOCK_SIZE, DIFF_TOKENS);
+  if (start>=DIFF_TOKENS) {
+    document.getElementById('diff-status').textContent='Block diffusion done!';
+    document.getElementById('diff-status').className='status-pill done';
+    return;
+  }
+  const maxSteps=3;
+  const clarity=(step+1)/maxSteps;
+  for (let i=start;i<end;i++) blockStates[i]=clarity;
+  document.getElementById('diff-steps-val').textContent=blockIdx*maxSteps+(step+1);
+  drawDiff();
+  if (step+1<maxSteps) diffRAF=setTimeout(()=>stepBlock(blockIdx, step+1), 400);
+  else diffRAF=setTimeout(()=>stepBlock(blockIdx+1, 0), 600);
+}
+
+function lerpColor(c1, c2, t) {
+  const h=s=>parseInt(s,16);
+  const r=Math.round(h(c1.slice(1,3))*(1-t)+h(c2.slice(1,3))*t);
+  const g=Math.round(h(c1.slice(3,5))*(1-t)+h(c2.slice(3,5))*t);
+  const b=Math.round(h(c1.slice(5,7))*(1-t)+h(c2.slice(5,7))*t);
+  return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+function drawDiff() {
+  const [ctx, W, H]=setupCanvas('c-diff', 420);
+  ctx.clearRect(0,0,W,H);
+  const cols=DIFF_TOKENS, TW=Math.floor((W-32)/cols)-3, TX0=16;
+
+  function drawRow(states, y, height, mode) {
+    for (let i=0;i<DIFF_TOKENS;i++) {
+      const tx=TX0+i*(TW+3);
+      let fill, stroke, textCol, text;
+      if (mode==='ar') {
+        const done=states[i]==='done';
+        fill=done?'rgba(13,148,136,0.2)':'rgba(0,0,0,0.03)';
+        stroke=done?'rgba(13,148,136,0.5)':C.border;
+        textCol=done?C.teal:C.text3; text=done?'t'+(i+1):'-';
+      } else if (mode==='diff') {
+        const c=states[i]||0;
+        fill=`rgba(37,99,235,${0.05+c*0.25})`;
+        stroke=c>0?`rgba(29,78,216,${c*0.7})`:C.border;
+        textCol=c>0.7?C.accent2:C.text3;
+        text=c===0?'?':c>=1?'t'+(i+1):'~'+(i+1);
+      } else { // block
+        const c=states[i]||0;
+        const bi=Math.floor(i/BLOCK_SIZE);
+        const cols2=['rgba(13,148,136,','rgba(29,78,216,','rgba(37,99,235,','rgba(180,83,9,'];
+        const col=cols2[bi%cols2.length];
+        fill=c>0?col+(0.05+c*0.2)+')':'rgba(0,0,0,0.03)';
+        stroke=c>0?col+(.5*c)+')':C.border;
+        textCol=c>0.5?C.text:C.text3;
+        text=c===0?'?':c>=1?'t'+(i+1):'~'+(i+1);
+      }
+      ctx.fillStyle=fill; ctx.strokeStyle=stroke; ctx.lineWidth=0.5;
+      rr(ctx, tx, y, TW, height, 4); ctx.fill(); ctx.stroke();
+      label(ctx, text, tx+TW/2, y+height/2+4, textCol, 9, 'center');
+    }
+  }
+
+  const ROW_H=34;
+
+  // AR section
+  label(ctx,'Autoregressive (memory-bound - 1 token per forward pass):', 16, 28, C.text2, 11);
+  ctx.fillStyle='rgba(220,38,38,0.05)'; ctx.strokeStyle='rgba(220,38,38,0.1)'; ctx.lineWidth=0.5;
+  rr(ctx, 16, 36, W-32, ROW_H+4, 6); ctx.fill(); ctx.stroke();
+  drawRow(arStates, 38, ROW_H, 'ar');
+  label(ctx,arT+' / '+DIFF_TOKENS+' tokens  |  '+arT+' forward passes', W-16, 86, C.coral, 9, 'right');
+
+  // Diffusion section
+  label(ctx,'Diffusion (compute-bound - all tokens refined per step):', 16, 112, C.text2, 11);
+  ctx.fillStyle='rgba(37,99,235,0.05)'; ctx.strokeStyle='rgba(37,99,235,0.1)'; ctx.lineWidth=0.5;
+  rr(ctx, 16, 120, W-32, ROW_H+4, 6); ctx.fill(); ctx.stroke();
+  drawRow(diffStates, 122, ROW_H, 'diff');
+  label(ctx,'step '+diffT+' / '+DIFF_STEPS+'  |  all '+DIFF_TOKENS+' positions updated each step', W-16, 170, C.accent, 9, 'right');
+
+  // Block diffusion
+  label(ctx,'Block diffusion (hybrid - diffusion within blocks, AR across):', 16, 196, C.text2, 11);
+  // Block boundary lines
+  ctx.strokeStyle='rgba(0,0,0,0.07)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  for (let b=1; b<DIFF_TOKENS/BLOCK_SIZE; b++) {
+    const bx=TX0+b*BLOCK_SIZE*(TW+3)-2;
+    ctx.beginPath(); ctx.moveTo(bx,204); ctx.lineTo(bx,204+ROW_H+4); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(0,0,0,0.02)'; ctx.strokeStyle='rgba(0,0,0,0.06)'; ctx.lineWidth=0.5;
+  rr(ctx, 16, 204, W-32, ROW_H+4, 6); ctx.fill(); ctx.stroke();
+  drawRow(blockStates, 206, ROW_H, 'block');
+  label(ctx,'block size '+BLOCK_SIZE+' - KV cache usable across blocks', W-16, 254, C.teal, 9, 'right');
+
+  // Timing comparison
+  const CMP_Y=278;
+  label(ctx,'Forward passes required for '+DIFF_TOKENS+' output tokens:', 16, CMP_Y-4, C.text2, 11);
+  const methods=[
+    {label:'AR decode', passes:DIFF_TOKENS, color:C.coral},
+    {label:'Diffusion (5 steps)', passes:DIFF_STEPS, color:C.accent2},
+    {label:'Block diffusion', passes:Math.ceil(DIFF_TOKENS/BLOCK_SIZE)*3, color:C.teal},
+  ];
+  const barMaxW=(W-32)*0.6;
+  const maxPasses=DIFF_TOKENS;
+  methods.forEach((m,i) => {
+    const by=CMP_Y+12+i*40;
+    label(ctx, m.label, 16, by+14, C.text2, 10);
+    const bw=barMaxW*(m.passes/maxPasses);
+    ctx.fillStyle=m.color+'22'; ctx.strokeStyle=m.color+'66'; ctx.lineWidth=0.5;
+    rr(ctx, 160, by, bw, 22, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=m.color;
+    ctx.font='500 11px "DM Mono"'; ctx.textAlign='left';
+    ctx.fillText(m.passes+' passes', 160+bw+8, by+14);
+  });
+}
+
+// ==============================
+// SECTION 6 - ROOFLINE
+// ==============================
+const ROOF_POINTS=[
+  {label:'AR decode\n(single query)', logX:0.05, logY:2.4, color:C.coral, desc:'Memory-bound: 0.1 FLOP/byte\n~200 tok/s ceiling'},
+  {label:'AR decode\n(large batch)', logX:0.8, logY:3.1, color:'#d97706', desc:'Batching raises intensity\nbut still memory-bound'},
+  {label:'Speculative\ndecoding', logX:1.3, logY:3.6, color:C.amber, desc:'Draft+verify: higher intensity\npushes toward ridge point'},
+  {label:'Diffusion LLM\n(block)', logX:2.3, logY:5.0, color:C.accent2, desc:'Compute-bound!\nAll tokens updated per step'},
+  {label:'Prefill\n(encode)', logX:2.9, logY:5.7, color:C.teal, desc:'Compute-bound\nPrompt tokens processed in parallel'},
+];
+let roofHover=-1;
+
+function drawRoofline() {
+  const [ctx, W, H]=setupCanvas('c-roof', 420);
+  ctx.clearRect(0,0,W,H);
+  const PL=70, PR=20, PT=30, PB=60;
+  const PW=W-PL-PR, pH=H-PT-PB;
+
+  const xMin=0, xMax=3.5, yMin=2, yMax=6.2;
+  const px=lx=>PL+(lx-xMin)/(xMax-xMin)*PW;
+  const py=ly=>PT+pH-(ly-yMin)/(yMax-yMin)*pH;
+
+  // Background grid
+  ctx.strokeStyle='rgba(0,0,0,0.04)'; ctx.lineWidth=0.5;
+  for (let x=0;x<=3;x++) { ctx.beginPath(); ctx.moveTo(px(x),PT); ctx.lineTo(px(x),PT+pH); ctx.stroke(); }
+  for (let y=2;y<=6;y++) { ctx.beginPath(); ctx.moveTo(PL,py(y)); ctx.lineTo(PL+PW,py(y)); ctx.stroke(); }
+
+  // Roofline: bandwidth slope then compute ceiling
+  const BW_SLOPE=Math.log10(3350); // log10(GB/s) - slope of memory line
+  const PEAK_COMPUTE=6; // log10(1e6 GFLOP/s)
+  const ridgeX=PEAK_COMPUTE-BW_SLOPE; // log10(FLOP/byte) at ridge
+
+  // Memory-bound shading
+  ctx.fillStyle='rgba(37,99,235,0.06)';
+  ctx.beginPath();
+  ctx.moveTo(px(xMin),py(yMin));
+  ctx.lineTo(px(xMin),Math.min(py(xMin+BW_SLOPE),py(yMin)));
+  if (ridgeX<xMax) ctx.lineTo(px(ridgeX),py(PEAK_COMPUTE));
+  ctx.lineTo(px(Math.min(ridgeX,xMax)),py(yMin));
+  ctx.closePath(); ctx.fill();
+
+  // Bandwidth slope line
+  ctx.strokeStyle=C.blue; ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(px(xMin),py(Math.min(yMax,xMin+BW_SLOPE)));
+  if (ridgeX<=xMax) ctx.lineTo(px(ridgeX),py(PEAK_COMPUTE));
+  else ctx.lineTo(px(xMax),py(xMax+BW_SLOPE));
+  ctx.stroke();
+
+  // Compute ceiling
+  ctx.strokeStyle=C.blue; ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(px(Math.min(ridgeX,xMax)),py(PEAK_COMPUTE));
+  ctx.lineTo(px(xMax),py(PEAK_COMPUTE));
+  ctx.stroke();
+
+  // Ridge point dashed
+  ctx.strokeStyle='rgba(0,0,0,0.1)'; ctx.lineWidth=0.5; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(px(ridgeX),py(PEAK_COMPUTE)); ctx.lineTo(px(ridgeX),py(yMin)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Region labels
+  label(ctx,'memory-bound', px(0.5), py(yMax-0.15), 'rgba(37,99,235,0.5)', 10, 'left');
+  label(ctx,'compute-bound', px(xMax)-4, py(yMax-0.15), 'rgba(37,99,235,0.5)', 10, 'right');
+  label(ctx,'ridge', px(ridgeX)+4, py(yMin)+14, C.text3, 9, 'left');
+  label(ctx,'H100 roofline', px(xMax)-4, py(PEAK_COMPUTE)-8, C.blue, 9, 'right');
+  label(ctx,'3.35 TB/s', px(1.2), py(1.2+BW_SLOPE)+2, C.blue, 9, 'center');
+
+  // Axes
+  ctx.strokeStyle=C.border2; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(PL,PT); ctx.lineTo(PL,PT+pH); ctx.lineTo(PL+PW,PT+pH); ctx.stroke();
+  [0,1,2,3].forEach(v=>{
+    label(ctx,'10^'+v, px(v), PT+pH+18, C.text3, 9, 'center');
+    // tick
+    ctx.strokeStyle=C.border2; ctx.lineWidth=0.5;
+    ctx.beginPath(); ctx.moveTo(px(v),PT+pH); ctx.lineTo(px(v),PT+pH+4); ctx.stroke();
+  });
+  [2,3,4,5,6].forEach(v=>{
+    label(ctx,'10^'+v, PL-6, py(v)+4, C.text3, 9, 'right');
+    ctx.beginPath(); ctx.moveTo(PL-4,py(v)); ctx.lineTo(PL,py(v)); ctx.stroke();
+  });
+
+  // Axis labels
+  label(ctx,'Arithmetic intensity (FLOP / byte)', PL+PW/2, H-14, C.text3, 11, 'center');
+  ctx.save(); ctx.translate(14, PT+pH/2); ctx.rotate(-Math.PI/2);
+  label(ctx,'Performance (GFLOP/s)', 0, 0, C.text3, 11, 'center');
+  ctx.restore();
+
+  // Workload points
+  ROOF_POINTS.forEach((p,i) => {
+    const cx=px(p.logX), cy=py(p.logY);
+    const hov=(roofHover===i);
+    const r=hov?12:9;
+    ctx.shadowColor=p.color; ctx.shadowBlur=hov?10:4;
+    ctx.fillStyle=p.color;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    if (hov) { ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke(); }
+    // Label
+    const lines=p.label.split('\n');
+    const lx= p.logX<2 ? cx+14 : cx-(lines.reduce((m,l)=>Math.max(m,l.length),0)*6.2+8);
+    lines.forEach((l,li)=>{
+      const ly=cy+(li-lines.length/2+0.5)*14;
+      label(ctx,l,lx,ly,p.color,10,'left');
+    });
+  });
+}
+
+function setupRooflineHover() {
+  const canvas=document.getElementById('c-roof');
+  const W=canvas.parentElement.clientWidth, H=420;
+  const PL=70, PR=20, PT=30, PB=60;
+  const PW=W-PL-PR, pH=H-PT-PB;
+  const xMin=0, xMax=3.5, yMin=2, yMax=6.2;
+  const px=lx=>PL+(lx-xMin)/(xMax-xMin)*PW;
+  const py=ly=>PT+pH-(ly-yMin)/(yMax-yMin)*pH;
+  const tip=document.getElementById('tip-roof');
+
+  canvas.onmousemove=e=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    let nearest=-1, minD=30;
+    ROOF_POINTS.forEach((p,i)=>{
+      const d=Math.hypot(mx-px(p.logX), my-py(p.logY));
+      if (d<minD) { minD=d; nearest=i; }
+    });
+    if (nearest!==roofHover) { roofHover=nearest; drawRoofline(); }
+    if (nearest>=0) {
+      const p=ROOF_POINTS[nearest];
+      tip.style.display='block';
+      tip.style.left=(px(p.logX)+14)+'px';
+      tip.style.top=(py(p.logY)-10)+'px';
+      tip.innerHTML=p.desc.replace('\n','<br>');
+    } else { tip.style.display='none'; }
+  };
+  canvas.onmouseleave=()=>{ roofHover=-1; drawRoofline(); tip.style.display='none'; };
+}
+
+// ==============================
+// INIT
+// ==============================
+window.addEventListener('load', ()=>{
+  initDiffStates();
+  initMem();
+  drawBatch();
+});
+window.addEventListener('resize', ()=>{ initSection(document.querySelector('.section.active').id.replace('sec-','')); });
+</script>
+</body>
+</html>
